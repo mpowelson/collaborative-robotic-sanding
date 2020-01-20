@@ -8,7 +8,7 @@ services:
 
 git:
   quiet: true
-  submodules: false
+  submodules: true
 
 notifications:
   email:
@@ -47,6 +47,20 @@ jobs:
       - NOT_TEST_BUILD=true
       - BEFORE_INIT="apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654"
       - BADGE=dashing
+      cache:
+        directories:
+          - $HOME/.ccache
+    - os: linux
+      dist: bionic
+      language: cpp
+      env:
+      - ROS_DISTRO="eloquent"
+      - NOT_TEST_BUILD=true
+      - BEFORE_INIT="apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654"
+      - BADGE=eloquent
+      cache:
+        directories:
+          - $HOME/.ccache
 
 install:
   - git clone --quiet --depth 1 https://github.com/ros-industrial/industrial_ci.git .industrial_ci -b master
