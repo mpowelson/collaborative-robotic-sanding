@@ -24,6 +24,7 @@ env:
     - NOT_TEST_INSTALL=true
     - CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Debug"
     - ROSDEP_SKIP_KEYS="catkin ompl descartes_tesseract"
+    - BEFORE_SCRIPT=.setup_mixins.sh
 
 jobs:
   include:
