@@ -25,11 +25,11 @@
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
-static const std::vector<double> COEFFICIENTS {10, 10, 10, 10, 10, 10};
+static const std::vector<double> COEFFICIENTS{ 10, 10, 10, 10, 10, 10 };
 
 void tesseractRosutilsToMsg(trajectory_msgs::msg::JointTrajectory& traj_msg,
-                              const std::vector<std::string>& joint_names,
-                              const Eigen::Ref<const tesseract_common::TrajArray>& traj)
+                            const std::vector<std::string>& joint_names,
+                            const Eigen::Ref<const tesseract_common::TrajArray>& traj)
 {
   assert(joint_names.size() == static_cast<unsigned>(traj.cols()));
 
@@ -56,23 +56,26 @@ void tesseractRosutilsToMsg(trajectory_msgs::msg::JointTrajectory& traj_msg,
   }
 }
 
-class PlanningServer: public rclcpp::Node
+class PlanningServer : public rclcpp::Node
 {
 public:
-  PlanningServer()
-    : Node("planning_server_node")
+  PlanningServer() : Node("planning_server_node")
   {
     // ROS parameters
-    this->declare_parameter("urdf_path", ament_index_cpp::get_package_share_directory("crs_support") + "/urdf/crs.urdf");
-    this->declare_parameter("srdf_path", ament_index_cpp::get_package_share_directory("crs_support") + "/urdf/ur10e_robot.srdf");
+    this->declare_parameter("urdf_path",
+                            ament_index_cpp::get_package_share_directory("crs_support") + "/urdf/crs.urdf");
+    this->declare_parameter("srdf_path",
+                            ament_index_cpp::get_package_share_directory("crs_support") + "/urdf/ur10e_robot.srdf");
     this->declare_parameter("base_link_frame", "world");
     this->declare_parameter("manipulator_group", "manipulator");
     this->declare_parameter("num_steps", 200);
 
     // ROS communications
-    plan_service_ = this->create_service<crs_msgs::srv::CallFreespaceMotion>("test_plan", std::bind(&PlanningServer::planService, this, std::placeholders::_1, std::placeholders::_2));
-    traj_publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("set_trajectory_test",10);
-    joint_state_listener_ = this->create_subscription<sensor_msgs::msg::JointState>("/joint_states", 2, std::bind(&PlanningServer::jointCallback, this, std::placeholders::_1));
+    plan_service_ = this->create_service<crs_msgs::srv::CallFreespaceMotion>(
+        "test_plan", std::bind(&PlanningServer::planService, this, std::placeholders::_1, std::placeholders::_2));
+    traj_publisher_ = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("set_trajectory_test", 10);
+    joint_state_listener_ = this->create_subscription<sensor_msgs::msg::JointState>(
+        "/joint_states", 2, std::bind(&PlanningServer::jointCallback, this, std::placeholders::_1));
 
     std::string urdf_path, srdf_path;
     urdf_path = this->get_parameter("urdf_path").as_string();
@@ -92,32 +95,38 @@ public:
 
     num_steps_ = this->get_parameter("num_steps").as_int();
   }
+
 private:
-  void jointCallback(const sensor_msgs::msg::JointState::SharedPtr joint_msg)
-  {
-    curr_joint_state_ = *joint_msg;
-  }
+  void jointCallback(const sensor_msgs::msg::JointState::SharedPtr joint_msg) { curr_joint_state_ = *joint_msg; }
   void planService(std::shared_ptr<crs_msgs::srv::CallFreespaceMotion::Request> request,
-                    std::shared_ptr<crs_msgs::srv::CallFreespaceMotion::Response> response)
+                   std::shared_ptr<crs_msgs::srv::CallFreespaceMotion::Response> response)
   {
     std::string target_frame = request->target_link;
 
     Eigen::Isometry3d tcp_eigen;
     tcp_eigen.setIdentity();
-    auto traj_pc = std::make_shared<tesseract_motion_planners::TrajOptPlannerFreespaceConfig>(tesseract_local_, manipulator_, target_frame, tcp_eigen);
+    auto traj_pc = std::make_shared<tesseract_motion_planners::TrajOptPlannerFreespaceConfig>(
+        tesseract_local_, manipulator_, target_frame, tcp_eigen);
 
-    std::vector<std::string> joint_names = tesseract_local_->getFwdKinematicsManagerConst()->getFwdKinematicSolver(manipulator_)->getJointNames();
+    std::vector<std::string> joint_names =
+        tesseract_local_->getFwdKinematicsManagerConst()->getFwdKinematicSolver(manipulator_)->getJointNames();
     // Initialize vector of target waypoints
     std::vector<tesseract_motion_planners::Waypoint::Ptr> trgt_wypts;
 
     // Define initial waypoint
-    tesseract_motion_planners::JointWaypoint::Ptr joint_init_waypoint = std::make_shared<tesseract_motion_planners::JointWaypoint>(curr_joint_state_.position, curr_joint_state_.name);
+    tesseract_motion_planners::JointWaypoint::Ptr joint_init_waypoint =
+        std::make_shared<tesseract_motion_planners::JointWaypoint>(curr_joint_state_.position, curr_joint_state_.name);
     joint_init_waypoint->setIsCritical(false);
 
     // Define goal waypoint
-    Eigen::Vector3d goal_pose(request->goal_pose.translation.x, request->goal_pose.translation.y, request->goal_pose.translation.z);
-    Eigen::Quaterniond goal_ori(request->goal_pose.rotation.w, request->goal_pose.rotation.x, request->goal_pose.rotation.y, request->goal_pose.rotation.z);
-    tesseract_motion_planners::CartesianWaypoint::Ptr goal_waypoint = std::make_shared<tesseract_motion_planners::CartesianWaypoint>(goal_pose, goal_ori);
+    Eigen::Vector3d goal_pose(
+        request->goal_pose.translation.x, request->goal_pose.translation.y, request->goal_pose.translation.z);
+    Eigen::Quaterniond goal_ori(request->goal_pose.rotation.w,
+                                request->goal_pose.rotation.x,
+                                request->goal_pose.rotation.y,
+                                request->goal_pose.rotation.z);
+    tesseract_motion_planners::CartesianWaypoint::Ptr goal_waypoint =
+        std::make_shared<tesseract_motion_planners::CartesianWaypoint>(goal_pose, goal_ori);
 
     goal_waypoint->setIsCritical(true);
     Eigen::VectorXd coeffs(6);
@@ -141,7 +150,6 @@ private:
     traj_pc->longest_valid_segment_length = 0.05;
     traj_pc->init_type = trajopt::InitInfo::STATIONARY;
 
-
     // Setup and solve trajopt motoin plannner
     tesseract_motion_planners::TrajOptMotionPlanner traj_motion_planner;
     tesseract_motion_planners::PlannerResponse plan_resp;
@@ -162,7 +170,7 @@ private:
     for (int i = 0; i < traj_pc->num_steps; ++i)
     {
       cumulative_joint_trajectory.points[static_cast<size_t>(i)].time_from_start.sec = 0;
-      cumulative_joint_trajectory.points[static_cast<size_t>(i)].time_from_start.nanosec = 0;//2e8;
+      cumulative_joint_trajectory.points[static_cast<size_t>(i)].time_from_start.nanosec = 0;  // 2e8;
     }
 
     response->output_trajectory = cumulative_joint_trajectory;
@@ -196,8 +204,7 @@ private:
   int num_steps_;
 };
 
-
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<PlanningServer>());
