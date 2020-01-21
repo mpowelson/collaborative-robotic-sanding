@@ -12,22 +12,18 @@
   <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-<!--
-  <depend>eigen_conversions</depend>
+
   <depend>geometry_msgs</depend>
-  <depend>opp_msgs_serialization</depend>
-  <depend>pcl_ros</depend>
-  <depend>roscpp</depend>
-  <depend>roslib</depend>
-  <depend>opp_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>shape_msgs</depend>
   <depend>std_srvs</depend>
-  <depend>tf</depend>
-  <depend>tf_conversions</depend>
-  <depend>visualization_msgs</depend>-->
   <depend>visualization_msgs</depend>
-  <depend>crs_msgs</depend>
+
   <depend>rclcpp</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_ros</depend>
+
+  <depend>crs_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
