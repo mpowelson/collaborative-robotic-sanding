@@ -25,11 +25,12 @@
 //#include <sensor_msgs/PointCloud2.h>
 //#include <shape_msgs/Mesh.h>
 //#include <std_srvs/Trigger.h>
-//#include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <std_srvs/srv/trigger.hpp>
-
 #include <crs_msgs/srv/get_roi_selection.hpp>
 
 namespace crs_area_selection
@@ -87,7 +88,9 @@ protected:
 
   rclcpp::Service<crs_msgs::srv::GetROISelection>::SharedPtr collect_roi_points_srv_;
 
-//  std::shared_ptr<tf::TransformListener> listener_;
+  rclcpp::Clock::SharedPtr clock_;
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
 
   visualization_msgs::msg::MarkerArray marker_array_;
 };

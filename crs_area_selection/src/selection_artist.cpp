@@ -210,17 +210,21 @@ SelectionArtist::SelectionArtist(const std::string& name,
                                  rclcpp::Node::SharedPtr node,
                                  const std::string& world_frame,
                                  const std::string& sensor_frame)
-  : name_(name), node_(node), world_frame_(world_frame), sensor_frame_(sensor_frame)
+  : name_(name), node_(node), world_frame_(world_frame), sensor_frame_(sensor_frame),  clock_(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME)),
+    tf_buffer_(clock_),
+    tf_listener_(tf_buffer_)
 {
   marker_pub_.reset();
   marker_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(MARKER_ARRAY_TOPIC, 1);
-//  listener_.reset(new tf::TransformListener(nh_));
 
-//  if (!listener_->waitForTransform(sensor_frame_, world_frame_, ros::Time(0), ros::Duration(TF_LOOKUP_TIMEOUT)))
-//  {
-//    ROS_ERROR("Transform lookup from %s to %s timed out", sensor_frame_.c_str(), world_frame_.c_str());
-//    throw std::runtime_error("Transform lookup timed out");
-//  }
+  tf_buffer_.canTransform(sensor_frame_, world_frame_, tf2::TimePointZero, tf2::durationFromSec(TF_LOOKUP_TIMEOUT));
+//  tf_buffer_.waitForTransform(sensor_frame_, world_frame_, tf2::TimePointZero, tf2::durationFromSec(TF_LOOKUP_TIMEOUT));
+
+  if (!tf_buffer_.canTransform(sensor_frame_, world_frame_, tf2::TimePointZero, tf2::durationFromSec(TF_LOOKUP_TIMEOUT)))
+  {
+    RCLCPP_ERROR(node_->get_logger(), "Transform lookup from %s to %s timed out", sensor_frame_.c_str(), world_frame_.c_str());
+    throw std::runtime_error("Transform lookup timed out");
+  }
   auto clear_roi_cb = std::bind(&SelectionArtist::clearROIPointsCb, this, std::placeholders::_1, std::placeholders::_2);
   clear_roi_points_srv_ = node_->create_service<std_srvs::srv::Trigger>(CLEAR_ROI_POINTS_SERVICE, clear_roi_cb);
 
@@ -236,8 +240,7 @@ SelectionArtist::SelectionArtist(const std::string& name,
 
 void SelectionArtist::clearROIPointsCb(const std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res)
 {
-//  (void)request_header;
-//  (void)req;  // To suppress warnings, tell the compiler we will not use this parameter
+  (void)req;  // To suppress warnings, tell the compiler we will not use this parameter
 
 //  for (auto it = marker_array_.markers.begin(); it != marker_array_.markers.end(); ++it)
 //  {
