@@ -26,16 +26,14 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 //#include <eigen_conversions/eigen_msg.h>
-//#include <geometry_msgs/PointStamped.h>
 //#include <opp_msgs_serialization/serialize.h>
-//#include <ros/package.h>
-//#include <shape_msgs/Mesh.h>
+#include <ament_index_cpp/get_package_share_directory.hpp>
 //#include <tf/tf.h>
-//#include <tf_conversions/tf_eigen.h>
+#include <tf2_eigen/tf2_eigen.h>
+#include <tf2/convert.h>
 
-//#include "opp_area_selection/area_selector.h"
-//#include "opp_area_selection/area_selector_parameters.h"
-//#include <crs_msgs/srv/GetROISelection.h>
+#include "crs_area_selection/area_selector.h"
+#include "crs_area_selection/area_selector_parameters.h"
 
 namespace crs_area_selection
 {
@@ -44,9 +42,8 @@ const static std::string MARKER_ARRAY_TOPIC = "roi_markers";
 const static std::string CLICKED_POINT_TOPIC = "clicked_point";
 const static std::string CLEAR_ROI_POINTS_SERVICE = "clear_selection_points";
 const static std::string COLLECT_ROI_POINTS_SERVICE = "collect_selection_points";
-//const static std::string area_selection_config_file = ros::package::getPath("opp_area_selection") + "/config/"
-//                                                                                                    "area_selection_"
-//                                                                                                    "parameters.yaml";
+const static std::string package_share_directory = ament_index_cpp::get_package_share_directory("opp_area_selection");
+const static std::string area_selection_config_file = package_share_directory + "/config/area_selection_parameters.yaml";
 
 }  // namespace opp_area_selection
 
@@ -170,9 +167,9 @@ bool pclFromShapeMsg(const shape_msgs::msg::Mesh& mesh_msg, pcl::PolygonMesh& pc
 //namespace YAML
 //{
 //template <>
-//struct convert<opp_area_selection::AreaSelectorParameters>
+//struct convert<crs_area_selection::AreaSelectorParameters>
 //{
-//  static Node encode(const opp_area_selection::AreaSelectorParameters& rhs)
+//  static Node encode(const crs_area_selection::AreaSelectorParameters& rhs)
 //  {
 //    Node node;
 //    node["cluster_tolerance"] = rhs.cluster_tolerance;
@@ -186,7 +183,7 @@ bool pclFromShapeMsg(const shape_msgs::msg::Mesh& mesh_msg, pcl::PolygonMesh& pc
 //    return node;
 //  }
 
-//  static bool decode(const Node& node, opp_area_selection::AreaSelectorParameters& rhs)
+//  static bool decode(const Node& node, crs_area_selection::AreaSelectorParameters& rhs)
 //  {
 //    if (node.size() != 8)
 //    {
@@ -220,7 +217,6 @@ SelectionArtist::SelectionArtist(const std::string& name,
   marker_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(MARKER_ARRAY_TOPIC, 1);
 
   tf_buffer_.canTransform(sensor_frame_, world_frame_, tf2::TimePointZero, tf2::durationFromSec(TF_LOOKUP_TIMEOUT));
-//  tf_buffer_.waitForTransform(sensor_frame_, world_frame_, tf2::TimePointZero, tf2::durationFromSec(TF_LOOKUP_TIMEOUT));
 
   if (!tf_buffer_.canTransform(sensor_frame_, world_frame_, tf2::TimePointZero, tf2::durationFromSec(TF_LOOKUP_TIMEOUT)))
   {
@@ -284,21 +280,21 @@ bool SelectionArtist::collectROIMesh(const shape_msgs::msg::Mesh& mesh_msg,
 
 void SelectionArtist::collectROIPointsCb(crs_msgs::srv::GetROISelection::Request::SharedPtr req, crs_msgs::srv::GetROISelection::Response::SharedPtr res)
 {
-//  auto points_it = std::find_if(marker_array_.markers.begin(),
-//                                marker_array_.markers.end(),
-//                                [](const visualization_msgs::Marker& marker) { return marker.id == 0; });
+  auto points_it = std::find_if(marker_array_.markers.begin(),
+                                marker_array_.markers.end(),
+                                [](const visualization_msgs::msg::Marker& marker) { return marker.id == 0; });
 
-//  // Convert the selection points to Eigen vectors
-//  std::vector<Eigen::Vector3d> points;
-//  for (const geometry_msgs::Point& pt : points_it->points)
-//  {
-//    Eigen::Vector3d e;
-//    tf::pointMsgToEigen(pt, e);
-//    points.push_back(std::move(e));
-//  }
+  // Convert the selection points to Eigen vectors
+  std::vector<Eigen::Vector3d> points;
+  for (const geometry_msgs::msg::Point& pt : points_it->points)
+  {
+    Eigen::Vector3d e;
+    tf2::fromMsg(pt, e);
+    points.push_back(std::move(e));
+  }
 
-//  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
-//  pcl::fromROSMsg(req.input_cloud, *cloud);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg(req->input_cloud, *cloud);
 
 //  AreaSelectorParameters params;
 //  bool success = opp_msgs_serialization::deserialize(area_selection_config_file, params);
@@ -308,20 +304,18 @@ void SelectionArtist::collectROIPointsCb(crs_msgs::srv::GetROISelection::Request
 //    return false;
 //  }
 //  AreaSelector sel;
-//  res.cloud_indices = sel.getRegionOfInterest(cloud, points, params);
+//  res->cloud_indices = sel.getRegionOfInterest(cloud, points, params);
 
-//  if (!res.cloud_indices.empty())
-//  {
-//    res.success = true;
-//    res.message = "Selection complete";
-//  }
-//  else
-//  {
-//    res.success = false;
-//    res.message = "Unable to identify points within selection boundary";
-//  }
-
-//  return true;
+  if (!res->cloud_indices.empty())
+  {
+    res->success = true;
+    res->message = "Selection complete";
+  }
+  else
+  {
+    res->success = false;
+    res->message = "Unable to identify points within selection boundary";
+  }
 }
 
 bool SelectionArtist::transformPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped,
@@ -341,17 +335,16 @@ bool SelectionArtist::transformPoint(const geometry_msgs::msg::PointStamped::Con
     return false;
   }
 
-//  Eigen::Affine3d transform;
-//  tf::transformTFToEigen(frame, transform);
+  Eigen::Isometry3d transform = tf2::transformToEigen(frame);
 
-//  // Transform the current selection point
-//  Eigen::Vector3d pt_vec_sensor;
-//  Eigen::Vector3d pt_vec_ff(pt_stamped->point.x, pt_stamped->point.y, pt_stamped->point.z);
-//  pt_vec_sensor = transform * pt_vec_ff;
+  // Transform the current selection point
+  Eigen::Vector3d pt_vec_sensor;
+  Eigen::Vector3d pt_vec_ff(pt_stamped->point.x, pt_stamped->point.y, pt_stamped->point.z);
+  pt_vec_sensor = transform * pt_vec_ff;
 
-//  transformed_pt.x = pt_vec_sensor(0);
-//  transformed_pt.y = pt_vec_sensor(1);
-//  transformed_pt.z = pt_vec_sensor(2);
+  transformed_pt.x = pt_vec_sensor(0);
+  transformed_pt.y = pt_vec_sensor(1);
+  transformed_pt.z = pt_vec_sensor(2);
 
   return true;
 }

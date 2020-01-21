@@ -60,7 +60,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 # Library containing tools for specifying regions
 # and determining inlying points
-add_library(${PROJECT_NAME}_area_selection SHARED   src/selection_artist.cpp)
+add_library(${PROJECT_NAME}_area_selection SHARED src/area_selector.cpp src/selection_artist.cpp)
 target_link_libraries(${PROJECT_NAME}_area_selection PUBLIC ${rclcpp_LIBRARIES} ${crs_msgs_LIBRARIES} ${visualization_msgs_LIBRARIES} ${PCL_LIBRARIES} )
 set_target_properties(${PROJECT_NAME}_area_selection PROPERTIES CXX_STANDARD 14)
 target_include_directories(${PROJECT_NAME}_area_selection PUBLIC

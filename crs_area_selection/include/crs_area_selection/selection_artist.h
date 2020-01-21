@@ -57,7 +57,8 @@ public:
   bool collectROIMesh(const shape_msgs::msg::Mesh& mesh_msg, shape_msgs::msg::Mesh& submesh_msg, std::string& message);
 
 protected:
-//  void getSensorData(const sensor_msgs::PointCloud2::ConstPtr& msg);
+  /** @brief Unimplemented */
+  void getSensorData(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg);
 
   void addSelectionPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped);
 
