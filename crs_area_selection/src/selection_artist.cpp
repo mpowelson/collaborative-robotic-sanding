@@ -38,7 +38,7 @@
 namespace crs_area_selection
 {
 //const static double TF_LOOKUP_TIMEOUT = 5.0;
-//const static std::string MARKER_ARRAY_TOPIC = "roi_markers";
+const static std::string MARKER_ARRAY_TOPIC = "roi_markers";
 //const static std::string CLICKED_POINT_TOPIC = "clicked_point";
 //const static std::string CLEAR_ROI_POINTS_SERVICE = "clear_selection_points";
 //const static std::string COLLECT_ROI_POINTS_SERVICE = "collect_selection_points";
@@ -212,8 +212,8 @@ SelectionArtist::SelectionArtist(const std::string& name,
                                  const std::string& sensor_frame)
   : name_(name), node_(node), world_frame_(world_frame), sensor_frame_(sensor_frame)
 {
-
-//  marker_pub_ = nh_.advertise<visualization_msgs::MarkerArray>(MARKER_ARRAY_TOPIC, 1, false);
+  marker_pub_.reset();
+  marker_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(MARKER_ARRAY_TOPIC, 1);
 //  listener_.reset(new tf::TransformListener(nh_));
 
 //  if (!listener_->waitForTransform(sensor_frame_, world_frame_, ros::Time(0), ros::Duration(TF_LOOKUP_TIMEOUT)))

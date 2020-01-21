@@ -60,7 +60,7 @@ add_definitions(${PCL_DEFINITIONS})
 # Library containing tools for specifying regions
 # and determining inlying points
 add_library(${PROJECT_NAME}_area_selection SHARED   src/selection_artist.cpp)
-target_link_libraries(${PROJECT_NAME}_area_selection PUBLIC ${rclcpp_LIBRARIES} ${crs_msgs_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_area_selection PUBLIC ${rclcpp_LIBRARIES} ${crs_msgs_LIBRARIES} ${visualization_msgs_LIBRARIES} ${PCL_LIBRARIES} )
 set_target_properties(${PROJECT_NAME}_area_selection PROPERTIES CXX_STANDARD 14)
 target_include_directories(${PROJECT_NAME}_area_selection PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -68,6 +68,7 @@ target_include_directories(${PROJECT_NAME}_area_selection PUBLIC
 target_include_directories(${PROJECT_NAME}_area_selection SYSTEM PUBLIC
     ${rclcpp_INCLUDE_DIRS}
     ${crs_msgs_INCLUDE_DIRS}
+    ${visualization_msgs_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
 #    ${tf2_ros_INCLUDE_DIRS}
     )

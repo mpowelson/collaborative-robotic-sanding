@@ -26,7 +26,7 @@
 //#include <shape_msgs/Mesh.h>
 //#include <std_srvs/Trigger.h>
 //#include <tf/transform_listener.h>
-//#include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 //#include <crs_msgs/srv/GetROISelection.h>
 
@@ -79,7 +79,7 @@ public:
 
 //  ros::Subscriber drawn_points_sub_;
 
-//  ros::Publisher marker_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
 
 //  ros::ServiceServer clear_roi_points_srv_;
 
