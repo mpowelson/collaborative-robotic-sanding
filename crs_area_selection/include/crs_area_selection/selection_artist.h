@@ -30,6 +30,7 @@
 
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
+#include <shape_msgs/msg/mesh.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <crs_msgs/srv/get_roi_selection.hpp>
 
@@ -57,7 +58,7 @@ public:
 
   void clearROIPointsCb(const std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res);
 
-//  bool collectROIMesh(const shape_msgs::Mesh& mesh_msg, shape_msgs::Mesh& submesh_msg, std::string& message);
+  bool collectROIMesh(const shape_msgs::msg::Mesh& mesh_msg, shape_msgs::msg::Mesh& submesh_msg, std::string& message);
 
 protected:
 //  void getSensorData(const sensor_msgs::PointCloud2::ConstPtr& msg);

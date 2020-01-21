@@ -48,34 +48,34 @@ const static std::string COLLECT_ROI_POINTS_SERVICE = "collect_selection_points"
 
 }  // namespace opp_area_selection
 
-//namespace
-//{
-//std::vector<visualization_msgs::Marker> makeVisual(const std::string& frame_id)
-//{
-//  visualization_msgs::Marker points, lines;
-//  points.header.frame_id = lines.header.frame_id = frame_id;
-//  points.ns = lines.ns = "roi_selection";
-//  points.action = lines.action = visualization_msgs::Marker::ADD;
+namespace
+{
+std::vector<visualization_msgs::msg::Marker> makeVisual(const std::string& frame_id)
+{
+  visualization_msgs::msg::Marker points, lines;
+  points.header.frame_id = lines.header.frame_id = frame_id;
+  points.ns = lines.ns = "roi_selection";
+  points.action = lines.action = visualization_msgs::msg::Marker::ADD;
 
-//  // Point specific properties
-//  points.id = 0;
-//  points.type = visualization_msgs::Marker::SPHERE_LIST;
-//  points.scale.x = points.scale.y = 0.1;
-//  points.color.r = points.color.a = 1.0;
-//  points.pose.orientation.w = 1.0;
+  // Point specific properties
+  points.id = 0;
+  points.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+  points.scale.x = points.scale.y = 0.1;
+  points.color.r = points.color.a = 1.0;
+  points.pose.orientation.w = 1.0;
 
-//  // Line specific properties
-//  lines.id = 1;
-//  lines.type = visualization_msgs::Marker::LINE_STRIP;
-//  lines.scale.x = lines.scale.y = 0.05;
-//  lines.color.r = lines.color.a = 1.0;
-//  lines.pose.orientation.w = 1.0;
+  // Line specific properties
+  lines.id = 1;
+  lines.type = visualization_msgs::msg::Marker::LINE_STRIP;
+  lines.scale.x = lines.scale.y = 0.05;
+  lines.color.r = lines.color.a = 1.0;
+  lines.pose.orientation.w = 1.0;
 
-//  std::vector<visualization_msgs::Marker> visuals;
-//  visuals.push_back(points);
-//  visuals.push_back(lines);
-//  return visuals;
-//}
+  std::vector<visualization_msgs::msg::Marker> visuals;
+  visuals.push_back(points);
+  visuals.push_back(lines);
+  return visuals;
+}
 
 //bool pclToShapeMsg(const pcl::PolygonMesh& pcl_mesh, shape_msgs::Mesh& mesh_msg)
 //{
@@ -163,7 +163,7 @@ const static std::string COLLECT_ROI_POINTS_SERVICE = "collect_selection_points"
 //  return true;
 //}
 
-//}  // namespace
+}  // namespace
 
 //namespace YAML
 //{
@@ -235,28 +235,28 @@ SelectionArtist::SelectionArtist(const std::string& name,
   auto drawn_points_cb = std::bind(&SelectionArtist::addSelectionPoint, this, std::placeholders::_1);
   drawn_points_sub_ = node->create_subscription<geometry_msgs::msg::PointStamped>(CLICKED_POINT_TOPIC, 1, drawn_points_cb);
 
-//  marker_array_.markers = makeVisual(sensor_frame);
+  marker_array_.markers = makeVisual(sensor_frame);
 }
 
 void SelectionArtist::clearROIPointsCb(const std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res)
 {
   (void)req;  // To suppress warnings, tell the compiler we will not use this parameter
 
-//  for (auto it = marker_array_.markers.begin(); it != marker_array_.markers.end(); ++it)
-//  {
-//    it->points.clear();
-//  }
+  for (auto it = marker_array_.markers.begin(); it != marker_array_.markers.end(); ++it)
+  {
+    it->points.clear();
+  }
 
-//  marker_pub_.publish(marker_array_);
-//  res.success = true;
-//  res.message = "Selection cleared";
+  marker_pub_->publish(marker_array_);
+  res->success = true;
+  res->message = "Selection cleared";
 
 }
 
-//bool SelectionArtist::collectROIMesh(const shape_msgs::Mesh& mesh_msg,
-//                                     shape_msgs::Mesh& submesh_msg,
-//                                     std::string& message)
-//{
+bool SelectionArtist::collectROIMesh(const shape_msgs::msg::Mesh& mesh_msg,
+                                     shape_msgs::msg::Mesh& submesh_msg,
+                                     std::string& message)
+{
 //  pcl::PolygonMesh mesh;
 //  pclFromShapeMsg(mesh_msg, mesh);
 //  pcl::PointCloud<pcl::PointXYZ> mesh_cloud;
@@ -276,8 +276,8 @@ void SelectionArtist::clearROIPointsCb(const std_srvs::srv::Trigger::Request::Sh
 //  filterMesh(mesh, srv.response.cloud_indices, submesh);
 //  pclToShapeMsg(submesh, submesh_msg);
 
-//  return true;
-//}
+  return true;
+}
 
 void SelectionArtist::collectROIPointsCb(crs_msgs::srv::GetROISelection::Request::SharedPtr req, crs_msgs::srv::GetROISelection::Response::SharedPtr res)
 {
@@ -325,17 +325,18 @@ bool SelectionArtist::transformPoint(const geometry_msgs::msg::PointStamped::Con
                                      geometry_msgs::msg::Point& transformed_pt)
 {
   RCLCPP_INFO_STREAM(node_->get_logger(), pt_stamped->header.frame_id);
+
   // Get the current transform from the world frame to the frame of the sensor data
-//  tf::StampedTransform frame;
-//  try
-//  {
-//    listener_->lookupTransform(sensor_frame_, world_frame_, ros::Time(0), frame);
-//  }
-//  catch (tf::TransformException ex)
-//  {
-//    ROS_ERROR("%s", ex.what());
-//    return false;
-//  }
+  geometry_msgs::msg::TransformStamped frame;
+  try
+  {
+    frame = tf_buffer_.lookupTransform(sensor_frame_, world_frame_, tf2::TimePointZero);
+  }
+  catch (tf2::TransformException ex)
+  {
+    RCLCPP_ERROR(node_->get_logger(), "%s", ex.what());
+    return false;
+  }
 
 //  Eigen::Affine3d transform;
 //  tf::transformTFToEigen(frame, transform);
@@ -355,48 +356,48 @@ bool SelectionArtist::transformPoint(const geometry_msgs::msg::PointStamped::Con
 void SelectionArtist::addSelectionPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped)
 {
   geometry_msgs::msg::Point pt;
-//  if (!transformPoint(pt_stamped, pt))
+  if (!transformPoint(pt_stamped, pt))
   {
     return;
   }
 
-//  // Get the iterator to the points and lines markers in the interactive marker
-//  std::vector<visualization_msgs::Marker>::iterator points_it;
-//  points_it = std::find_if(marker_array_.markers.begin(),
-//                           marker_array_.markers.end(),
-//                           [](const visualization_msgs::Marker& marker) { return marker.id == 0; });
+  // Get the iterator to the points and lines markers in the interactive marker
+  std::vector<visualization_msgs::msg::Marker>::iterator points_it;
+  points_it = std::find_if(marker_array_.markers.begin(),
+                           marker_array_.markers.end(),
+                           [](const visualization_msgs::msg::Marker& marker) { return marker.id == 0; });
 
-//  std::vector<visualization_msgs::Marker>::iterator lines_it;
-//  lines_it = std::find_if(marker_array_.markers.begin(),
-//                          marker_array_.markers.end(),
-//                          [](const visualization_msgs::Marker& marker) { return marker.id == 1; });
+  std::vector<visualization_msgs::msg::Marker>::iterator lines_it;
+  lines_it = std::find_if(marker_array_.markers.begin(),
+                          marker_array_.markers.end(),
+                          [](const visualization_msgs::msg::Marker& marker) { return marker.id == 1; });
 
-//  // Add new point to the points marker
-//  if (points_it == marker_array_.markers.end() || lines_it == marker_array_.markers.end())
-//  {
-//    ROS_ERROR("Unable to find line or point marker");
-//    return;
-//  }
-//  else
-//  {
-//    points_it->points.push_back(pt);
+  // Add new point to the points marker
+  if (points_it == marker_array_.markers.end() || lines_it == marker_array_.markers.end())
+  {
+    RCLCPP_ERROR(node_->get_logger(), "Unable to find line or point marker");
+    return;
+  }
+  else
+  {
+    points_it->points.push_back(pt);
 
-//    // Add the point to the front and back of the lines' points array if it is the first entry
-//    // Lines connect adjacent points, so first point must be entered twice to close the polygon
-//    if (lines_it->points.empty())
-//    {
-//      lines_it->points.push_back(pt);
-//      lines_it->points.push_back(pt);
-//    }
-//    // Insert the new point in the second to last position if points already exist in the array
-//    else
-//    {
-//      const auto it = lines_it->points.end() - 1;
-//      lines_it->points.insert(it, pt);
-//    }
-//  }
+    // Add the point to the front and back of the lines' points array if it is the first entry
+    // Lines connect adjacent points, so first point must be entered twice to close the polygon
+    if (lines_it->points.empty())
+    {
+      lines_it->points.push_back(pt);
+      lines_it->points.push_back(pt);
+    }
+    // Insert the new point in the second to last position if points already exist in the array
+    else
+    {
+      const auto it = lines_it->points.end() - 1;
+      lines_it->points.insert(it, pt);
+    }
+  }
 
-//  marker_pub_.publish(marker_array_);
+  marker_pub_->publish(marker_array_);
 }
 
 //void SelectionArtist::filterMesh(const pcl::PolygonMesh& input_mesh,
