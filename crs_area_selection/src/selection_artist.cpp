@@ -221,8 +221,8 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //    ROS_ERROR("Transform lookup from %s to %s timed out", sensor_frame_.c_str(), world_frame_.c_str());
 //    throw std::runtime_error("Transform lookup timed out");
 //  }
-
-//  clear_roi_points_srv_ = nh_.advertiseService(CLEAR_ROI_POINTS_SERVICE, &SelectionArtist::clearROIPointsCb, this);
+  auto clear_roi_cb = std::bind(&SelectionArtist::clearROIPointsCb, this, std::placeholders::_1, std::placeholders::_2);
+  clear_roi_points_srv_ = node_->create_service<std_srvs::srv::Trigger>(CLEAR_ROI_POINTS_SERVICE, clear_roi_cb);
 //  collect_roi_points_srv_ =
 //      nh_.advertiseService(COLLECT_ROI_POINTS_SERVICE, &SelectionArtist::collectROIPointsCb, this);
 
@@ -233,8 +233,9 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //  marker_array_.markers = makeVisual(sensor_frame);
 }
 
-//bool SelectionArtist::clearROIPointsCb(std_srvs::TriggerRequest& req, std_srvs::TriggerResponse& res)
-//{
+void SelectionArtist::clearROIPointsCb(const std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res)
+{
+//  (void)request_header;
 //  (void)req;  // To suppress warnings, tell the compiler we will not use this parameter
 
 //  for (auto it = marker_array_.markers.begin(); it != marker_array_.markers.end(); ++it)
@@ -246,8 +247,7 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //  res.success = true;
 //  res.message = "Selection cleared";
 
-//  return true;
-//}
+}
 
 //bool SelectionArtist::collectROIMesh(const shape_msgs::Mesh& mesh_msg,
 //                                     shape_msgs::Mesh& submesh_msg,
@@ -317,11 +317,11 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //  return true;
 //}
 
-//bool SelectionArtist::transformPoint(const geometry_msgs::PointStamped::ConstPtr pt_stamped,
-//                                     geometry_msgs::Point& transformed_pt)
-//{
-//  ROS_INFO_STREAM(pt_stamped->header.frame_id);
-//  // Get the current transform from the world frame to the frame of the sensor data
+bool SelectionArtist::transformPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped,
+                                     geometry_msgs::msg::Point& transformed_pt)
+{
+  RCLCPP_INFO_STREAM(node_->get_logger(), pt_stamped->header.frame_id);
+  // Get the current transform from the world frame to the frame of the sensor data
 //  tf::StampedTransform frame;
 //  try
 //  {
@@ -345,16 +345,16 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //  transformed_pt.y = pt_vec_sensor(1);
 //  transformed_pt.z = pt_vec_sensor(2);
 
-//  return true;
-//}
+  return true;
+}
 
 void SelectionArtist::addSelectionPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped)
 {
-//  geometry_msgs::Point pt;
+  geometry_msgs::msg::Point pt;
 //  if (!transformPoint(pt_stamped, pt))
-//  {
-//    return;
-//  }
+  {
+    return;
+  }
 
 //  // Get the iterator to the points and lines markers in the interactive marker
 //  std::vector<visualization_msgs::Marker>::iterator points_it;

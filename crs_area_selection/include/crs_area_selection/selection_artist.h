@@ -28,6 +28,7 @@
 //#include <tf/transform_listener.h>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 //#include <crs_msgs/srv/GetROISelection.h>
 
@@ -53,16 +54,16 @@ public:
    */
   SelectionArtist(const std::string& name, rclcpp::Node::SharedPtr node, const std::string& world_frame, const std::string& sensor_frame);
 
-//  bool clearROIPointsCb(std_srvs::TriggerRequest& req, std_srvs::TriggerResponse& res);
+  void clearROIPointsCb(const std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res);
 
 //  bool collectROIMesh(const shape_msgs::Mesh& mesh_msg, shape_msgs::Mesh& submesh_msg, std::string& message);
 
-//protected:
+protected:
 //  void getSensorData(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
   void addSelectionPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped);
 
-//  bool transformPoint(const geometry_msgs::PointStamped::ConstPtr pt_stamped, geometry_msgs::Point& transformed_pt);
+  bool transformPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped, geometry_msgs::msg::Point& transformed_pt);
 
 //  bool collectROIPointsCb(opp_msgs::GetROISelection::Request& req, opp_msgs::GetROISelection::Response& res);
 
@@ -82,13 +83,13 @@ public:
 
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
 
-//  ros::ServiceServer clear_roi_points_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr clear_roi_points_srv_;
 
 //  ros::ServiceServer collect_roi_points_srv_;
 
 //  std::shared_ptr<tf::TransformListener> listener_;
 
-//  visualization_msgs::MarkerArray marker_array_;
+  visualization_msgs::msg::MarkerArray marker_array_;
 };
 
 }  // namespace opp_area_selection
