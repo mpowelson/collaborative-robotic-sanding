@@ -205,11 +205,10 @@ bool pclFromShapeMsg(const shape_msgs::msg::Mesh& mesh_msg, pcl::PolygonMesh& pc
 
 namespace crs_area_selection
 {
-SelectionArtist::SelectionArtist(const std::string& name,
-                                 rclcpp::Node::SharedPtr node,
+SelectionArtist::SelectionArtist(rclcpp::Node::SharedPtr node,
                                  const std::string& world_frame,
                                  const std::string& sensor_frame)
-  : name_(name), node_(node), world_frame_(world_frame), sensor_frame_(sensor_frame),  clock_(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME)),
+  : node_(node), world_frame_(world_frame), sensor_frame_(sensor_frame),  clock_(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME)),
     tf_buffer_(clock_),
     tf_listener_(tf_buffer_)
 {

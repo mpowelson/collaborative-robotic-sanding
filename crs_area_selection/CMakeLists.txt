@@ -1,53 +1,17 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(crs_area_selection VERSION 0.1.0 LANGUAGES CXX)
 
+add_compile_options(-std=c++14) # Remove
 
-
-add_compile_options(-std=c++14)
-
-#find_package(catkin REQUIRED COMPONENTS
-#  eigen_conversions
-#  geometry_msgs
-#  opp_msgs_serialization
-#  roscpp
-#  roslib
-#  opp_msgs
-#  sensor_msgs
-#  std_srvs
-#  tf
-#  tf_conversions
-#  visualization_msgs
-#)
-
-#Add tf2?
 find_package(rclcpp REQUIRED)
-find_package(crs_msgs REQUIRED)
-find_package(Eigen3 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_eigen REQUIRED)
 
+find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 add_definitions(${PCL_DEFINITIONS})
 
-#catkin_package(
-#  INCLUDE_DIRS
-#    include
-#  LIBRARIES
-#    area_selection
-#  CATKIN_DEPENDS
-#    eigen_conversions
-#    geometry_msgs
-#    opp_msgs_serialization
-#    roscpp
-#    roslib
-#    opp_msgs
-#    sensor_msgs
-#    std_srvs
-#    tf
-#    tf_conversions
-#    visualization_msgs
-#  DEPENDS
-#    EIGEN3
-#    PCL
-#)
+find_package(crs_msgs REQUIRED)
 
 
 
@@ -61,7 +25,13 @@ add_definitions(${PCL_DEFINITIONS})
 # Library containing tools for specifying regions
 # and determining inlying points
 add_library(${PROJECT_NAME}_area_selection SHARED src/area_selector.cpp src/selection_artist.cpp)
-target_link_libraries(${PROJECT_NAME}_area_selection PUBLIC ${rclcpp_LIBRARIES} ${crs_msgs_LIBRARIES} ${visualization_msgs_LIBRARIES} ${PCL_LIBRARIES} )
+target_link_libraries(${PROJECT_NAME}_area_selection PUBLIC
+  ${rclcpp_LIBRARIES}
+  ${crs_msgs_LIBRARIES}
+  ${visualization_msgs_LIBRARIES} # ?
+  ${PCL_LIBRARIES}
+  ${tf2_ros_LIBRARIES}
+  ${tf2_eigen_LIBRARIES})
 set_target_properties(${PROJECT_NAME}_area_selection PROPERTIES CXX_STANDARD 14)
 target_include_directories(${PROJECT_NAME}_area_selection PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -71,29 +41,40 @@ target_include_directories(${PROJECT_NAME}_area_selection SYSTEM PUBLIC
     ${crs_msgs_INCLUDE_DIRS}
     ${visualization_msgs_INCLUDE_DIRS}
     ${PCL_INCLUDE_DIRS}
-#    ${tf2_ros_INCLUDE_DIRS}
+    ${tf2_ros_INCLUDE_DIRS}
+    ${tf2_eigen_INCLUDE_DIRS}
     )
 list (APPEND PACKAGE_LIBRARIES ${PROJECT_NAME}_area_selection)
 
 
-## Node that runs area selection service
-#add_executable(area_selection_node
-#  src/area_selection_node.cpp
-#)
-#target_link_libraries(area_selection_node
-#  area_selection
-#  ${catkin_LIBRARIES}
-#)
-#add_dependencies(area_selection_node
-#  ${catkin_EXPORTED_TARGETS}
-#  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#)
+# Node that runs area selection service
+add_executable(${PROJECT_NAME}_area_selection_node src/area_selection_node.cpp)
+target_link_libraries(${PROJECT_NAME}_area_selection_node PRIVATE
+    ${PROJECT_NAME}_area_selection
+    ${rclcpp_LIBRARIES}
+    ${tf2_ros_LIBRARIES}
+    ${tf2_eigen_LIBRARIES}
+    )
+target_compile_options(${PROJECT_NAME}_area_selection_node PRIVATE -Wall -Wextra -Wsuggest-override -Wconversion -Wsign-conversion)
+set_target_properties(${PROJECT_NAME}_area_selection_node PROPERTIES CXX_STANDARD 14)
+target_include_directories(${PROJECT_NAME}_area_selection_node PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>")
+target_include_directories(${PROJECT_NAME}_area_selection_node SYSTEM PUBLIC
+  ${PROJECT_NAME}_area_selection_INCLUDE_DIRS
+    ${rclcpp_INCLUDE_DIRS}
+    ${tf2_ros_INCLUDE_DIRS}
+    ${tf2_eigen_INCLUDE_DIRS}
+)
+list (APPEND PACKAGE_LIBRARIES ${PROJECT_NAME}_area_selection_node)
+
+
+
+
 
 
 # Install built targets
 install(TARGETS
     ${PROJECT_NAME}_area_selection
-#    area_selection_node
+    ${PROJECT_NAME}_area_selection_node
     DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY include/${PROJECT_NAME}/

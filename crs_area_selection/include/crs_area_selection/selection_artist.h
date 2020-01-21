@@ -50,7 +50,7 @@ public:
    * @param world_frame
    * @param sensor_frame
    */
-  SelectionArtist(const std::string& name, rclcpp::Node::SharedPtr node, const std::string& world_frame, const std::string& sensor_frame);
+  SelectionArtist(rclcpp::Node::SharedPtr node, const std::string& world_frame, const std::string& sensor_frame);
 
   void clearROIPointsCb(const std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr res);
 
@@ -69,8 +69,6 @@ protected:
   void filterMesh(const pcl::PolygonMesh& input_mesh,
                   const std::vector<int>& inlying_indices,
                   pcl::PolygonMesh& output_mesh);
-
-  std::string name_;
 
   rclcpp::Node::SharedPtr node_;
 

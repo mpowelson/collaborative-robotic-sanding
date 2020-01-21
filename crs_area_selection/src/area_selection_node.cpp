@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Southwest Research Institute
+ * Copyright 2020 Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,55 +14,42 @@
  * limitations under the License.
  */
 
-#include <ros/ros.h>
-#include <tf/transform_listener.h>
+#include <rclcpp/rclcpp.hpp>
 
-#include "opp_area_selection/area_selector.h"
-#include "opp_area_selection/selection_artist.h"
-
-static const float TIMEOUT = 15.0;
+#include "crs_area_selection/area_selector.h"
+#include "crs_area_selection/selection_artist.h"
 
 int main(int argc, char** argv)
 {
   // Set up ROS.
-  ros::init(argc, argv, "roi_selection_node");
+  rclcpp::init(argc, argv);
+//  rclcpp::sleep_for(std::chrono::seconds(3));
+  auto node = std::make_shared<rclcpp::Node>("roi_selection_node");
 
-  // Set up ROS node handle
-  ros::NodeHandle pnh("~");
-  ros::NodeHandle nh;
+  std::string world_frame = "world";
+  std::string sensor_data_frame = "sensor_data_frame";
+  RCLCPP_WARN(node->get_logger(), "World frame and sensor_data_frame are not being set from parameters");
 
-  ros::AsyncSpinner spinner(1);
-  spinner.start();
+//  // Get ROS parameters
+//  std::string world_frame;
+//  if (!pnh.getParam("world_frame", world_frame))
+//  {
+//    ROS_FATAL("'world_frame' parameter must be set");
+//    return 1;
+//  }
 
-  // Get ROS parameters
-  std::string world_frame;
-  if (!pnh.getParam("world_frame", world_frame))
-  {
-    ROS_FATAL("'world_frame' parameter must be set");
-    return 1;
-  }
-
-  std::string sensor_data_frame;
-  if (!pnh.getParam("sensor_data_frame", sensor_data_frame))
-  {
-    ROS_FATAL("'sensor_data_frame' parameter must be set");
-    return 1;
-  }
-
-  // Wait for tf to initialize
-  tf::TransformListener listener;
-  if (!listener.waitForTransform(
-          world_frame, sensor_data_frame, ros::Time(0), ros::Duration(static_cast<double>(TIMEOUT))))
-  {
-    ROS_ERROR("Transform lookup between '%s' and '%s' timed out", world_frame.c_str(), sensor_data_frame.c_str());
-    return -1;
-  }
+//  std::string sensor_data_frame;
+//  if (!pnh.getParam("sensor_data_frame", sensor_data_frame))
+//  {
+//    ROS_FATAL("'sensor_data_frame' parameter must be set");
+//    return 1;
+//  }
 
   // Set up the selection artist
-  opp_area_selection::SelectionArtist artist(nh, world_frame, sensor_data_frame);
+  crs_area_selection::SelectionArtist artist(node, world_frame, sensor_data_frame);
 
-  ros::waitForShutdown();
-  spinner.stop();
-
+  // This used an aysnc spinner for some reason.
+  rclcpp::spin(node);
+  rclcpp::shutdown();
   return 0;
 }
