@@ -19,6 +19,7 @@ add_compile_options(-std=c++14)
 #  visualization_msgs
 #)
 
+#Add tf2?
 find_package(rclcpp REQUIRED)
 find_package(crs_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)

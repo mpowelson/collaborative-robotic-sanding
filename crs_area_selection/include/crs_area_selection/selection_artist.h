@@ -17,20 +17,16 @@
 #ifndef CRS_AREA_SELECTION_SELECTION_AREA_ARTIST_H
 #define CRS_AREA_SELECTION_SELECTION_AREA_ARTIST_H
 
-//#include <pcl/PolygonMesh.h>
+#include <pcl/PolygonMesh.h>
 
-//#include <geometry_msgs/PointStamped.h>
-//#include <ros/ros.h>
 #include <rclcpp/rclcpp.hpp>
-//#include <sensor_msgs/PointCloud2.h>
-//#include <shape_msgs/Mesh.h>
-//#include <std_srvs/Trigger.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer.h>
 
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <shape_msgs/msg/mesh.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <crs_msgs/srv/get_roi_selection.hpp>
 
@@ -69,9 +65,9 @@ protected:
 
   void collectROIPointsCb(crs_msgs::srv::GetROISelection::Request::SharedPtr req, crs_msgs::srv::GetROISelection::Response::SharedPtr res);
 
-//  void filterMesh(const pcl::PolygonMesh& input_mesh,
-//                  const std::vector<int>& inlying_indices,
-//                  pcl::PolygonMesh& output_mesh);
+  void filterMesh(const pcl::PolygonMesh& input_mesh,
+                  const std::vector<int>& inlying_indices,
+                  pcl::PolygonMesh& output_mesh);
 
   std::string name_;
 

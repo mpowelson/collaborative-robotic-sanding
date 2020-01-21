@@ -18,10 +18,12 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-//#include <pcl/conversions.h>
-//#include <pcl/point_cloud.h>
-//#include <pcl/PolygonMesh.h>
-//#include <pcl/surface/simplification_remove_unused_vertices.h>
+#include <pcl/conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/PolygonMesh.h>
+#include <pcl/surface/simplification_remove_unused_vertices.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 //#include <eigen_conversions/eigen_msg.h>
 //#include <geometry_msgs/PointStamped.h>
@@ -77,91 +79,91 @@ std::vector<visualization_msgs::msg::Marker> makeVisual(const std::string& frame
   return visuals;
 }
 
-//bool pclToShapeMsg(const pcl::PolygonMesh& pcl_mesh, shape_msgs::Mesh& mesh_msg)
-//{
-//  // Make sure that there are at least three points and at least one polygon
-//  if (pcl_mesh.cloud.height * pcl_mesh.cloud.width < 3 || pcl_mesh.polygons.size() < 1)
-//  {
-//    return false;
-//  }
+bool pclToShapeMsg(const pcl::PolygonMesh& pcl_mesh, shape_msgs::msg::Mesh& mesh_msg)
+{
+  // Make sure that there are at least three points and at least one polygon
+  if (pcl_mesh.cloud.height * pcl_mesh.cloud.width < 3 || pcl_mesh.polygons.size() < 1)
+  {
+    return false;
+  }
 
-//  // Prepare the message's vectors to receive data
-//  // One resize now saves time later
-//  mesh_msg.vertices.resize(pcl_mesh.cloud.height * pcl_mesh.cloud.width);
-//  mesh_msg.triangles.resize(pcl_mesh.polygons.size());
+  // Prepare the message's vectors to receive data
+  // One resize now saves time later
+  mesh_msg.vertices.resize(pcl_mesh.cloud.height * pcl_mesh.cloud.width);
+  mesh_msg.triangles.resize(pcl_mesh.polygons.size());
 
-//  // Get the points from the pcl mesh
-//  pcl::PointCloud<pcl::PointXYZ> vertices;
-//  pcl::fromPCLPointCloud2(pcl_mesh.cloud, vertices);
+  // Get the points from the pcl mesh
+  pcl::PointCloud<pcl::PointXYZ> vertices;
+  pcl::fromPCLPointCloud2(pcl_mesh.cloud, vertices);
 
-//  // Copy the coordinates inside the vertices into the new mesh
-//  // TODO: Maybe check for nan?
-//  for (std::size_t i = 0; i < vertices.size(); ++i)
-//  {
-//    mesh_msg.vertices[i].x = static_cast<double>(vertices[i]._PointXYZ::x);
-//    mesh_msg.vertices[i].y = static_cast<double>(vertices[i]._PointXYZ::y);
-//    mesh_msg.vertices[i].z = static_cast<double>(vertices[i]._PointXYZ::z);
-//  }
+  // Copy the coordinates inside the vertices into the new mesh
+  // TODO: Maybe check for nan?
+  for (std::size_t i = 0; i < vertices.size(); ++i)
+  {
+    mesh_msg.vertices[i].x = static_cast<double>(vertices[i]._PointXYZ::x);
+    mesh_msg.vertices[i].y = static_cast<double>(vertices[i]._PointXYZ::y);
+    mesh_msg.vertices[i].z = static_cast<double>(vertices[i]._PointXYZ::z);
+  }
 
-//  // Copy the vertex indices (which describe each polygon) from
-//  // the old mesh to the new mesh
-//  for (std::size_t i = 0; i < pcl_mesh.polygons.size(); ++i)
-//  {
-//    // If a 'polygon' in the old mesh did not have 3 or more vertices,
-//    // throw an error.  (If the polygon has 4 or more, just use the first
-//    // 3 to make a triangle.)
-//    // TODO: It is possible to decompose any polygon into multiple
-//    // triangles, and that would prevent loss of data here.
-//    if (pcl_mesh.polygons[i].vertices.size() < 3)
-//    {
-//      return false;
-//    }
-//    mesh_msg.triangles[i].vertex_indices[0] = pcl_mesh.polygons[i].vertices[0];
-//    mesh_msg.triangles[i].vertex_indices[1] = pcl_mesh.polygons[i].vertices[1];
-//    mesh_msg.triangles[i].vertex_indices[2] = pcl_mesh.polygons[i].vertices[2];
-//  }
+  // Copy the vertex indices (which describe each polygon) from
+  // the old mesh to the new mesh
+  for (std::size_t i = 0; i < pcl_mesh.polygons.size(); ++i)
+  {
+    // If a 'polygon' in the old mesh did not have 3 or more vertices,
+    // throw an error.  (If the polygon has 4 or more, just use the first
+    // 3 to make a triangle.)
+    // TODO: It is possible to decompose any polygon into multiple
+    // triangles, and that would prevent loss of data here.
+    if (pcl_mesh.polygons[i].vertices.size() < 3)
+    {
+      return false;
+    }
+    mesh_msg.triangles[i].vertex_indices[0] = pcl_mesh.polygons[i].vertices[0];
+    mesh_msg.triangles[i].vertex_indices[1] = pcl_mesh.polygons[i].vertices[1];
+    mesh_msg.triangles[i].vertex_indices[2] = pcl_mesh.polygons[i].vertices[2];
+  }
 
-//  return true;
-//}
+  return true;
+}
 
-//bool pclFromShapeMsg(const shape_msgs::Mesh& mesh_msg, pcl::PolygonMesh& pcl_mesh)
-//{
-//  // Make sure that there are at least three points and at least one polygon
-//  if (mesh_msg.vertices.size() < 3 || mesh_msg.triangles.size() < 1)
-//  {
-//    return false;
-//  }
+bool pclFromShapeMsg(const shape_msgs::msg::Mesh& mesh_msg, pcl::PolygonMesh& pcl_mesh)
+{
+  // Make sure that there are at least three points and at least one polygon
+  if (mesh_msg.vertices.size() < 3 || mesh_msg.triangles.size() < 1)
+  {
+    return false;
+  }
 
-//  // Prepare PCL structures to receive data
-//  // Resizing once now saves time later
-//  pcl::PointCloud<pcl::PointXYZ> vertices;
-//  vertices.resize(mesh_msg.vertices.size());
-//  pcl_mesh.polygons.resize(mesh_msg.triangles.size());
+  // Prepare PCL structures to receive data
+  // Resizing once now saves time later
+  pcl::PointCloud<pcl::PointXYZ> vertices;
+  vertices.resize(mesh_msg.vertices.size());
+  pcl_mesh.polygons.resize(mesh_msg.triangles.size());
 
-//  // Copy the vertex indices (which describe each polygon) from
-//  // the old mesh to the new mesh
-//  for (std::size_t i = 0; i < mesh_msg.vertices.size(); ++i)
-//  {
-//    vertices[i]._PointXYZ::x = static_cast<float>(mesh_msg.vertices[i].x);
-//    vertices[i]._PointXYZ::y = static_cast<float>(mesh_msg.vertices[i].y);
-//    vertices[i]._PointXYZ::z = static_cast<float>(mesh_msg.vertices[i].z);
-//  }
+  // Copy the vertex indices (which describe each polygon) from
+  // the old mesh to the new mesh
+  for (std::size_t i = 0; i < mesh_msg.vertices.size(); ++i)
+  {
+    vertices[i]._PointXYZ::x = static_cast<float>(mesh_msg.vertices[i].x);
+    vertices[i]._PointXYZ::y = static_cast<float>(mesh_msg.vertices[i].y);
+    vertices[i]._PointXYZ::z = static_cast<float>(mesh_msg.vertices[i].z);
+  }
 
-//  // Copy the vertex indices (which describe each polygon) from
-//  // the old mesh to the new mesh
-//  for (std::size_t i = 0; i < mesh_msg.triangles.size(); ++i)
-//  {
-//    pcl_mesh.polygons[i].vertices.resize(3);
-//    pcl_mesh.polygons[i].vertices[0] = mesh_msg.triangles[i].vertex_indices[0];
-//    pcl_mesh.polygons[i].vertices[1] = mesh_msg.triangles[i].vertex_indices[1];
-//    pcl_mesh.polygons[i].vertices[2] = mesh_msg.triangles[i].vertex_indices[2];
-//  }
+  // Copy the vertex indices (which describe each polygon) from
+  // the old mesh to the new mesh
+  for (std::size_t i = 0; i < mesh_msg.triangles.size(); ++i)
+  {
+    pcl_mesh.polygons[i].vertices.resize(3);
+    pcl_mesh.polygons[i].vertices[0] = mesh_msg.triangles[i].vertex_indices[0];
+    pcl_mesh.polygons[i].vertices[1] = mesh_msg.triangles[i].vertex_indices[1];
+    pcl_mesh.polygons[i].vertices[2] = mesh_msg.triangles[i].vertex_indices[2];
+  }
 
-//  // Use the filled pointcloud to populate the pcl mesh
-//  pcl::toPCLPointCloud2(vertices, pcl_mesh.cloud);
+  // Use the filled pointcloud to populate the pcl mesh
+  pcl::toPCLPointCloud2(vertices, pcl_mesh.cloud);
 
-//  return true;
-//}
+  return true;
+}
 
 }  // namespace
 
@@ -257,24 +259,25 @@ bool SelectionArtist::collectROIMesh(const shape_msgs::msg::Mesh& mesh_msg,
                                      shape_msgs::msg::Mesh& submesh_msg,
                                      std::string& message)
 {
-//  pcl::PolygonMesh mesh;
-//  pclFromShapeMsg(mesh_msg, mesh);
-//  pcl::PointCloud<pcl::PointXYZ> mesh_cloud;
-//  pcl::fromPCLPointCloud2(mesh.cloud, mesh_cloud);
-//  opp_msgs::GetROISelection srv;
-//  pcl::toROSMsg(mesh_cloud, srv.request.input_cloud);
+  pcl::PolygonMesh mesh;
+  pclFromShapeMsg(mesh_msg, mesh);
+  pcl::PointCloud<pcl::PointXYZ> mesh_cloud;
+  pcl::fromPCLPointCloud2(mesh.cloud, mesh_cloud);
+  crs_msgs::srv::GetROISelection::Request::SharedPtr req;
+  pcl::toROSMsg(mesh_cloud, req->input_cloud);
 
-//  bool success = collectROIPointsCb(srv.request, srv.response);
-//  if (!success || !srv.response.success)
-//  {
-//    submesh_msg = mesh_msg;
-//    message = srv.response.message;
-//    return false;
-//  }
+  crs_msgs::srv::GetROISelection::Response::SharedPtr res;
+  collectROIPointsCb(req, res);
+  if (!res->success)
+  {
+    submesh_msg = mesh_msg;
+    message = res->message;
+    return false;
+  }
 
-//  pcl::PolygonMesh submesh;
-//  filterMesh(mesh, srv.response.cloud_indices, submesh);
-//  pclToShapeMsg(submesh, submesh_msg);
+  pcl::PolygonMesh submesh;
+  filterMesh(mesh, res->cloud_indices, submesh);
+  pclToShapeMsg(submesh, submesh_msg);
 
   return true;
 }
@@ -400,36 +403,36 @@ void SelectionArtist::addSelectionPoint(const geometry_msgs::msg::PointStamped::
   marker_pub_->publish(marker_array_);
 }
 
-//void SelectionArtist::filterMesh(const pcl::PolygonMesh& input_mesh,
-//                                 const std::vector<int>& inlying_indices,
-//                                 pcl::PolygonMesh& output_mesh)
-//{
-//  // mark inlying points as true and outlying points as false
-//  std::vector<bool> whitelist(input_mesh.cloud.width * input_mesh.cloud.height, false);
-//  for (std::size_t i = 0; i < inlying_indices.size(); ++i)
-//  {
-//    whitelist[static_cast<std::size_t>(inlying_indices[i])] = true;
-//  }
+void SelectionArtist::filterMesh(const pcl::PolygonMesh& input_mesh,
+                                 const std::vector<int>& inlying_indices,
+                                 pcl::PolygonMesh& output_mesh)
+{
+  // mark inlying points as true and outlying points as false
+  std::vector<bool> whitelist(input_mesh.cloud.width * input_mesh.cloud.height, false);
+  for (std::size_t i = 0; i < inlying_indices.size(); ++i)
+  {
+    whitelist[static_cast<std::size_t>(inlying_indices[i])] = true;
+  }
 
-//  // All points marked 'false' in the whitelist will be removed. If
-//  // all of the polygon's points are marked 'true', that polygon
-//  // should be included.
-//  pcl::PolygonMesh intermediate_mesh;
-//  intermediate_mesh.cloud = input_mesh.cloud;
-//  for (std::size_t i = 0; i < input_mesh.polygons.size(); ++i)
-//  {
-//    if (whitelist[input_mesh.polygons[i].vertices[0]] && whitelist[input_mesh.polygons[i].vertices[1]] &&
-//        whitelist[input_mesh.polygons[i].vertices[2]])
-//    {
-//      intermediate_mesh.polygons.push_back(input_mesh.polygons[i]);
-//    }
-//  }
+  // All points marked 'false' in the whitelist will be removed. If
+  // all of the polygon's points are marked 'true', that polygon
+  // should be included.
+  pcl::PolygonMesh intermediate_mesh;
+  intermediate_mesh.cloud = input_mesh.cloud;
+  for (std::size_t i = 0; i < input_mesh.polygons.size(); ++i)
+  {
+    if (whitelist[input_mesh.polygons[i].vertices[0]] && whitelist[input_mesh.polygons[i].vertices[1]] &&
+        whitelist[input_mesh.polygons[i].vertices[2]])
+    {
+      intermediate_mesh.polygons.push_back(input_mesh.polygons[i]);
+    }
+  }
 
-//  // Remove unused points and save the result to the output mesh
-//  pcl::surface::SimplificationRemoveUnusedVertices simplifier;
-//  simplifier.simplify(intermediate_mesh, output_mesh);
+  // Remove unused points and save the result to the output mesh
+  pcl::surface::SimplificationRemoveUnusedVertices simplifier;
+  simplifier.simplify(intermediate_mesh, output_mesh);
 
-//  return;
-//}
+  return;
+}
 
 }  // namespace opp_area_selection
