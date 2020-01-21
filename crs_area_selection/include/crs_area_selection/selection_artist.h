@@ -30,7 +30,7 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <std_srvs/srv/trigger.hpp>
 
-//#include <crs_msgs/srv/GetROISelection.h>
+#include <crs_msgs/srv/get_roi_selection.hpp>
 
 namespace crs_area_selection
 {
@@ -65,7 +65,7 @@ protected:
 
   bool transformPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped, geometry_msgs::msg::Point& transformed_pt);
 
-//  bool collectROIPointsCb(opp_msgs::GetROISelection::Request& req, opp_msgs::GetROISelection::Response& res);
+  void collectROIPointsCb(crs_msgs::srv::GetROISelection::Request::SharedPtr req, crs_msgs::srv::GetROISelection::Response::SharedPtr res);
 
 //  void filterMesh(const pcl::PolygonMesh& input_mesh,
 //                  const std::vector<int>& inlying_indices,
@@ -85,7 +85,7 @@ protected:
 
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr clear_roi_points_srv_;
 
-//  ros::ServiceServer collect_roi_points_srv_;
+  rclcpp::Service<crs_msgs::srv::GetROISelection>::SharedPtr collect_roi_points_srv_;
 
 //  std::shared_ptr<tf::TransformListener> listener_;
 

@@ -223,10 +223,11 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //  }
   auto clear_roi_cb = std::bind(&SelectionArtist::clearROIPointsCb, this, std::placeholders::_1, std::placeholders::_2);
   clear_roi_points_srv_ = node_->create_service<std_srvs::srv::Trigger>(CLEAR_ROI_POINTS_SERVICE, clear_roi_cb);
-//  collect_roi_points_srv_ =
-//      nh_.advertiseService(COLLECT_ROI_POINTS_SERVICE, &SelectionArtist::collectROIPointsCb, this);
 
-//  // Initialize subscribers and callbacks
+  auto collect_roi_cb = std::bind(&SelectionArtist::collectROIPointsCb, this, std::placeholders::_1, std::placeholders::_2);
+  collect_roi_points_srv_ = node_->create_service<crs_msgs::srv::GetROISelection>(COLLECT_ROI_POINTS_SERVICE, collect_roi_cb);
+
+  // Initialize subscribers and callbacks
   auto drawn_points_cb = std::bind(&SelectionArtist::addSelectionPoint, this, std::placeholders::_1);
   drawn_points_sub_ = node->create_subscription<geometry_msgs::msg::PointStamped>(CLICKED_POINT_TOPIC, 1, drawn_points_cb);
 
@@ -275,8 +276,8 @@ void SelectionArtist::clearROIPointsCb(const std_srvs::srv::Trigger::Request::Sh
 //  return true;
 //}
 
-//bool SelectionArtist::collectROIPointsCb(opp_msgs::GetROISelectionRequest& req, opp_msgs::GetROISelectionResponse& res)
-//{
+void SelectionArtist::collectROIPointsCb(crs_msgs::srv::GetROISelection::Request::SharedPtr req, crs_msgs::srv::GetROISelection::Response::SharedPtr res)
+{
 //  auto points_it = std::find_if(marker_array_.markers.begin(),
 //                                marker_array_.markers.end(),
 //                                [](const visualization_msgs::Marker& marker) { return marker.id == 0; });
@@ -315,7 +316,7 @@ void SelectionArtist::clearROIPointsCb(const std_srvs::srv::Trigger::Request::Sh
 //  }
 
 //  return true;
-//}
+}
 
 bool SelectionArtist::transformPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped,
                                      geometry_msgs::msg::Point& transformed_pt)
