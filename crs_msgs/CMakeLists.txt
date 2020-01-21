@@ -35,9 +35,10 @@ find_package(geometry_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 
 set(MSG_FILES
+  srv/CallFreespaceMotion.srv
+  srv/GetROISelection.srv
   srv/LoadPart.srv
   srv/LocalizeToPart.srv
-  srv/CallFreespaceMotion.srv
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
