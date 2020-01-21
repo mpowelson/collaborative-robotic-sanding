@@ -37,11 +37,11 @@
 
 namespace crs_area_selection
 {
-//const static double TF_LOOKUP_TIMEOUT = 5.0;
+const static double TF_LOOKUP_TIMEOUT = 5.0;
 const static std::string MARKER_ARRAY_TOPIC = "roi_markers";
-//const static std::string CLICKED_POINT_TOPIC = "clicked_point";
-//const static std::string CLEAR_ROI_POINTS_SERVICE = "clear_selection_points";
-//const static std::string COLLECT_ROI_POINTS_SERVICE = "collect_selection_points";
+const static std::string CLICKED_POINT_TOPIC = "clicked_point";
+const static std::string CLEAR_ROI_POINTS_SERVICE = "clear_selection_points";
+const static std::string COLLECT_ROI_POINTS_SERVICE = "collect_selection_points";
 //const static std::string area_selection_config_file = ros::package::getPath("opp_area_selection") + "/config/"
 //                                                                                                    "area_selection_"
 //                                                                                                    "parameters.yaml";
@@ -227,9 +227,8 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //      nh_.advertiseService(COLLECT_ROI_POINTS_SERVICE, &SelectionArtist::collectROIPointsCb, this);
 
 //  // Initialize subscribers and callbacks
-//  boost::function<void(const geometry_msgs::PointStampedConstPtr&)> drawn_points_cb;
-//  drawn_points_cb = boost::bind(&SelectionArtist::addSelectionPoint, this, _1);
-//  drawn_points_sub_ = nh_.subscribe(CLICKED_POINT_TOPIC, 1, drawn_points_cb);
+  auto drawn_points_cb = std::bind(&SelectionArtist::addSelectionPoint, this, std::placeholders::_1);
+  drawn_points_sub_ = node->create_subscription<geometry_msgs::msg::PointStamped>(CLICKED_POINT_TOPIC, 1, drawn_points_cb);
 
 //  marker_array_.markers = makeVisual(sensor_frame);
 }
@@ -349,8 +348,8 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //  return true;
 //}
 
-//void SelectionArtist::addSelectionPoint(const geometry_msgs::PointStampedConstPtr pt_stamped)
-//{
+void SelectionArtist::addSelectionPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped)
+{
 //  geometry_msgs::Point pt;
 //  if (!transformPoint(pt_stamped, pt))
 //  {
@@ -394,7 +393,7 @@ SelectionArtist::SelectionArtist(const std::string& name,
 //  }
 
 //  marker_pub_.publish(marker_array_);
-//}
+}
 
 //void SelectionArtist::filterMesh(const pcl::PolygonMesh& input_mesh,
 //                                 const std::vector<int>& inlying_indices,

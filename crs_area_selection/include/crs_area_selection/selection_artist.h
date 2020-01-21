@@ -27,6 +27,7 @@
 //#include <std_srvs/Trigger.h>
 //#include <tf/transform_listener.h>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include <geometry_msgs/msg/point_stamped.hpp>
 
 //#include <crs_msgs/srv/GetROISelection.h>
 
@@ -59,7 +60,7 @@ public:
 //protected:
 //  void getSensorData(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
-//  void addSelectionPoint(const geometry_msgs::PointStamped::ConstPtr pt_stamped);
+  void addSelectionPoint(const geometry_msgs::msg::PointStamped::ConstSharedPtr pt_stamped);
 
 //  bool transformPoint(const geometry_msgs::PointStamped::ConstPtr pt_stamped, geometry_msgs::Point& transformed_pt);
 
@@ -77,7 +78,7 @@ public:
 
   std::string sensor_frame_;
 
-//  ros::Subscriber drawn_points_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr drawn_points_sub_;
 
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
 
