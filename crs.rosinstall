@@ -4,4 +4,4 @@
 - git: {local-name: tesseract, uri: 'https://github.com/mpowelson/tesseract.git', version: feature/ros2_temp}
 - git: {local-name: tesseract_ros2, uri: 'https://github.com/ben-greenberg/tesseract_ros2.git', version: feature/continuous_collision_improvements}
 - git: {local-name: trajopt_ros, uri: 'https://github.com/ros-industrial-consortium/trajopt_ros.git', version: master}
-- git: {local-name: ros_scxml, uri: 'https://github.com/swri-robotics/ros_scxml.git', version: master}
+- git: {local-name: ros_scxml, uri: 'https://github.com/mpowelson/ros_scxml.git', version: feature/temp_ros2}
