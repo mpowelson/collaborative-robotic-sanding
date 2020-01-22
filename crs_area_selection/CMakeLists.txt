@@ -92,9 +92,10 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
 )
 
-install(FILES config/area_selection_parameters.yaml
-  DESTINATION share/${PROJECT_NAME}/config
-)
+# This was removed to avoid confusion until serialization is added again
+#install(FILES config/area_selection_parameters.yaml
+#  DESTINATION share/${PROJECT_NAME}/config
+#)
 
 # Create cmake config files
 #include(CMakePackageConfigHelpers)

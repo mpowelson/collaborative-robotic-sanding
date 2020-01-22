@@ -294,15 +294,16 @@ void SelectionArtist::collectROIPointsCb(crs_msgs::srv::GetROISelection::Request
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::fromROSMsg(req->input_cloud, *cloud);
 
-//  AreaSelectorParameters params;
+  AreaSelectorParameters params;
+  // Fix this in order to change the parameters via yaml
 //  bool success = opp_msgs_serialization::deserialize(area_selection_config_file, params);
 //  if (!success)
 //  {
 //    ROS_ERROR_STREAM("Could not load area selection config from: " << area_selection_config_file);
 //    return false;
 //  }
-//  AreaSelector sel;
-//  res->cloud_indices = sel.getRegionOfInterest(cloud, points, params);
+  AreaSelector sel;
+  res->cloud_indices = sel.getRegionOfInterest(cloud, points, params);
 
   if (!res->cloud_indices.empty())
   {
