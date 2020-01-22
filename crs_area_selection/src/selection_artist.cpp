@@ -41,7 +41,7 @@ const static std::string MARKER_ARRAY_TOPIC = "roi_markers";
 const static std::string CLICKED_POINT_TOPIC = "clicked_point";
 const static std::string CLEAR_ROI_POINTS_SERVICE = "clear_selection_points";
 const static std::string COLLECT_ROI_POINTS_SERVICE = "collect_selection_points";
-const static std::string package_share_directory = ament_index_cpp::get_package_share_directory("opp_area_selection");
+const static std::string package_share_directory = ament_index_cpp::get_package_share_directory("crs_area_selection");
 const static std::string area_selection_config_file = package_share_directory + "/config/area_selection_parameters.yaml";
 
 }  // namespace opp_area_selection
