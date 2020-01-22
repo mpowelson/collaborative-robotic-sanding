@@ -24,6 +24,7 @@ env:
     - NOT_TEST_INSTALL=true
     - CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Debug"
     - ROSDEP_SKIP_KEYS="catkin ompl message_runtime message_generation dynamic_reconfigure roscpp roslib eigen_conversions"
+    - DOCKER_FILE
 
 jobs:
   include:
@@ -39,21 +40,12 @@ jobs:
       cache:
         directories:
           - $HOME/.ccache
+
     - os: linux
       dist: bionic
       language: cpp
       env:
-      - ROS_DISTRO="dashing"
-      - NOT_TEST_BUILD=true
-      - BEFORE_INIT="apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654"
-      - BADGE=dashing
-      cache:
-        directories:
-          - $HOME/.ccache
-    - os: linux
-      dist: bionic
-      language: cpp
-      env:
+      - DOCKER_FILE=eloquent.dockerfile
       - ROS_DISTRO="eloquent"
       - NOT_TEST_BUILD=true
       - BEFORE_INIT="apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654"
