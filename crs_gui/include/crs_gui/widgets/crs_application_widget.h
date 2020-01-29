@@ -44,7 +44,8 @@ class CRSApplicationWidget : public QWidget
   Q_OBJECT
 public:
   CRSApplicationWidget(rclcpp::Node::SharedPtr node,
-                       QWidget* parent = nullptr);
+                       QWidget* parent = nullptr,
+                       std::string database_directory = std::string(std::getenv("HOME")) + "/.local/share/offline_generated_paths");
 
 protected Q_SLOTS:
 
@@ -54,7 +55,7 @@ protected Q_SLOTS:
   void browseForMeshResource();
   void loadMeshFromResource();
 
-  void loadModelsFromDatabase();
+  void refreshPartsList();
   void onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem* previous);
   void loadSelectedModel();
   void saveModel();
@@ -100,6 +101,8 @@ private:
 
   std::string mesh_resource_;
   uint32_t generated_model_id_;
+
+  std::string database_directory_;
 
 };
 

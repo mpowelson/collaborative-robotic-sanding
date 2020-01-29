@@ -26,6 +26,8 @@
 //#include <QSqlRecord>
 #include <QTableView>
 
+#include <boost/filesystem.hpp>
+
 //#include <geometric_shapes/mesh_operations.h>
 //#include <geometric_shapes/shape_operations.h>
 //#include <ros/console.h>
@@ -36,12 +38,14 @@
 #include "ui_crs_application.h"
 
 const static std::string MESH_MARKER_TOPIC = "mesh_marker";
+const bool USE_DATABASE=false;
 
 namespace crs_gui
 {
 CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
-                                           QWidget* parent)
-  : QWidget(parent), ui_(new Ui::CRSApplication), node_(node)
+                                           QWidget* parent,
+                                           std::string database_directory)
+  : QWidget(parent), ui_(new Ui::CRSApplication), node_(node), database_directory_(database_directory)
 {
 //  ui_ = new Ui::CrsApplication();
   ui_->setupUi(this);
@@ -92,57 +96,56 @@ CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
 
 //  // Connect the signals and slots
 //  connect(ui_->push_button_find_model_file, &QPushButton::clicked, this, &ToolPathPlannerWidget::browseForMeshResource);
-//  connect(ui_->push_button_load_parts_from_database,
-//          &QPushButton::clicked,
-//          this,
-//          &ToolPathPlannerWidget::loadModelsFromDatabase);
-//  loadModelsFromDatabase();
-//  connect(
-//      ui_->list_widget_parts, &QListWidget::currentItemChanged, this, &ToolPathPlannerWidget::onModelSelectionChanged);
-//  connect(ui_->push_button_load_selected_part, &QPushButton::clicked, this, &ToolPathPlannerWidget::loadSelectedModel);
-//  connect(ui_->push_button_save_entry, &QPushButton::clicked, this, &ToolPathPlannerWidget::saveModel);
+  connect(ui_->push_button_refresh_part_list, &QPushButton::clicked, this, &CRSApplicationWidget::refreshPartsList);
+  refreshPartsList();
+  //  connect(
+  //      ui_->list_widget_parts, &QListWidget::currentItemChanged, this,
+  //      &ToolPathPlannerWidget::onModelSelectionChanged);
+  connect(ui_->push_button_load_selected_part, &QPushButton::clicked, this, &CRSApplicationWidget::loadSelectedModel);
+  //  connect(ui_->push_button_save_entry, &QPushButton::clicked, this, &ToolPathPlannerWidget::saveModel);
 
-//  // Signals & slots for the buttons on job definition page
-//  connect(ui_->push_button_new_job, &QPushButton::clicked, this, &ToolPathPlannerWidget::newJob);
-//  connect(ui_->push_button_load_jobs_from_database,
-//          &QPushButton::clicked,
-//          this,
-//          &ToolPathPlannerWidget::loadJobsFromDatabase);
-//  connect(ui_->list_widget_jobs, &QListWidget::currentItemChanged, this, &ToolPathPlannerWidget::onJobSelectionChanged);
-//  connect(ui_->push_button_load_selected_job, &QPushButton::clicked, this, &ToolPathPlannerWidget::loadSelectedJob);
-//  connect(ui_->push_button_save_job, &QPushButton::clicked, this, &ToolPathPlannerWidget::saveJob);
+  //  // Signals & slots for the buttons on job definition page
+  //  connect(ui_->push_button_new_job, &QPushButton::clicked, this, &ToolPathPlannerWidget::newJob);
+  //  connect(ui_->push_button_load_jobs_from_database,
+  //          &QPushButton::clicked,
+  //          this,
+  //          &ToolPathPlannerWidget::loadJobsFromDatabase);
+  //  connect(ui_->list_widget_jobs, &QListWidget::currentItemChanged, this,
+  //  &ToolPathPlannerWidget::onJobSelectionChanged); connect(ui_->push_button_load_selected_job, &QPushButton::clicked,
+  //  this, &ToolPathPlannerWidget::loadSelectedJob); connect(ui_->push_button_save_job, &QPushButton::clicked, this,
+  //  &ToolPathPlannerWidget::saveJob);
 
-//  // Signals & Slots for the Buttons on database management page
-//  connect(ui_->push_button_show_part, &QPushButton::clicked, this, &ToolPathPlannerWidget::showPartFromDatabase);
-//  connect(ui_->push_button_suppress_part, &QPushButton::clicked, this, &ToolPathPlannerWidget::deletePart);
-//  connect(ui_->push_button_suppress_job, &QPushButton::clicked, this, &ToolPathPlannerWidget::deleteJob);
-//  connect(ui_->push_button_refresh_parts, &QPushButton::clicked, this, &ToolPathPlannerWidget::refresh);
-//  connect(ui_->push_button_refresh_jobs, &QPushButton::clicked, this, &ToolPathPlannerWidget::refresh);
+  //  // Signals & Slots for the Buttons on database management page
+  //  connect(ui_->push_button_show_part, &QPushButton::clicked, this, &ToolPathPlannerWidget::showPartFromDatabase);
+  //  connect(ui_->push_button_suppress_part, &QPushButton::clicked, this, &ToolPathPlannerWidget::deletePart);
+  //  connect(ui_->push_button_suppress_job, &QPushButton::clicked, this, &ToolPathPlannerWidget::deleteJob);
+  //  connect(ui_->push_button_refresh_parts, &QPushButton::clicked, this, &ToolPathPlannerWidget::refresh);
+  //  connect(ui_->push_button_refresh_jobs, &QPushButton::clicked, this, &ToolPathPlannerWidget::refresh);
 
-//  // Add a publisher for the mesh marker
-//  pub_ = nh_.advertise<visualization_msgs::Marker>(MESH_MARKER_TOPIC, 1, true);
+  //  // Add a publisher for the mesh marker
+  //  pub_ = nh_.advertise<visualization_msgs::Marker>(MESH_MARKER_TOPIC, 1, true);
 
-//  // Set up the Database views in the third page
-//  std::string query = "`suppressed`!=\"1\"";
-//  model_parts_ = new QSqlTableModel(this, database_.getDatabase());
-//  model_parts_->setTable(QString::fromStdString(opp_db::PARTS_TABLE_NAME));
-//  model_parts_->setEditStrategy(QSqlTableModel::OnManualSubmit);
-//  model_parts_->select();
-//  model_parts_->setFilter(QString::fromStdString(query));
-//  model_parts_->removeColumn(model_parts_->columnCount() - 1);  // don't show the 'suppressed' column
-//  model_jobs_ = new QSqlTableModel(this, database_.getDatabase());
-//  model_jobs_->setTable(QString::fromStdString(opp_db::JOBS_TABLE_NAME));
-//  model_jobs_->setEditStrategy(QSqlTableModel::OnManualSubmit);
-//  model_jobs_->select();
-//  model_jobs_->setFilter(QString::fromStdString(query));
-//  model_jobs_->removeColumn(model_jobs_->columnCount() - 1);  // don't show the 'suppressed' column
-//  // Attach them to the views
-//  ui_->table_view_parts->setModel(model_parts_);
-//  ui_->table_view_parts->setEditTriggers(QTableView::NoEditTriggers);  // Make read only
-//  ui_->table_view_parts->show();
-//  ui_->table_view_jobs->setModel(model_jobs_);
-//  ui_->table_view_jobs->setEditTriggers(QTableView::NoEditTriggers);  // Make read only
-//  ui_->table_view_jobs->show();
+  //  // Set up the Database views in the third page
+  //  std::string query = "`suppressed`!=\"1\"";
+  //  model_parts_ = new QSqlTableModel(this, database_.getDatabase());
+  //  model_parts_->setTable(QString::fromStdString(opp_db::PARTS_TABLE_NAME));
+  //  model_parts_->setEditStrategy(QSqlTableModel::OnManualSubmit);
+  //  model_parts_->select();
+  //  model_parts_->setFilter(QString::fromStdString(query));
+  //  model_parts_->removeColumn(model_parts_->columnCount() - 1);  // don't show the 'suppressed' column
+  //  model_jobs_ = new QSqlTableModel(this, database_.getDatabase());
+  //  model_jobs_->setTable(QString::fromStdString(opp_db::JOBS_TABLE_NAME));
+  //  model_jobs_->setEditStrategy(QSqlTableModel::OnManualSubmit);
+  //  model_jobs_->select();
+  //  model_jobs_->setFilter(QString::fromStdString(query));
+  //  model_jobs_->removeColumn(model_jobs_->columnCount() - 1);  // don't show the 'suppressed' column
+  //  // Attach them to the views
+  //  ui_->table_view_parts->setModel(model_parts_);
+  //  ui_->table_view_parts->setEditTriggers(QTableView::NoEditTriggers);  // Make read only
+  //  ui_->table_view_parts->show();
+  //  ui_->table_view_jobs->setModel(model_jobs_);
+  //  ui_->table_view_jobs->setEditTriggers(QTableView::NoEditTriggers);  // Make read only
+  //  ui_->table_view_jobs->show();
 }
 
 void CRSApplicationWidget::setVisualizationFrame(const QString& text)
@@ -208,38 +211,34 @@ void CRSApplicationWidget::loadMeshFromResource()
 //    return;
 }
 
-void CRSApplicationWidget::loadModelsFromDatabase()
+void CRSApplicationWidget::refreshPartsList()
 {
-//  // Create the variables the database interface will fill
-//  std::map<unsigned int, opp_msgs::Part> parts_map;
-//  std::string error_msg;
+  using namespace boost::filesystem;
+  std::vector<path> part_dirs;
+  for ( directory_iterator itr(database_directory_); itr!=directory_iterator(); itr++)
+  {
+    if (is_directory(itr->path()))
+      part_dirs.push_back(itr->path());
+  }
 
-//  // Retrieve part info from the database
-//  if (!database_.getAllPartsFromDatabase(error_msg, parts_map))
-//  {
-//    // If the function failed, create a warning pop-up box.
-//    std::string message = "Failed to retrieve parts from database, experienced error: " + error_msg;
-//    QMessageBox::warning(this, "Database Communication Error", QString::fromStdString(message));
-//  }
-//  else
-//  {
-//    // If the function succeeded, clear existing part lists
-//    existing_parts_.clear();
-//    ui_->list_widget_parts->clear();
-
-//    // And then add each part to those lists, one at a time
-//    for (const std::pair<unsigned int, opp_msgs::Part> id_and_part : parts_map)
-//    {
-//      // internal list of parts
-//      existing_parts_.push_back(id_and_part.second);
-
-//      // Gui display listing parts to user
-//      QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(id_and_part.second.name));
-//      item->setData(Qt::ItemDataRole::UserRole, QVariant(QString::fromStdString(id_and_part.second.description)));
-//      ui_->list_widget_parts->addItem(item);
-//    }
-//  }
-//  return;
+  // Retrieve part info from the database
+  if (!part_dirs.size())
+  {
+    // If the function failed, create a warning pop-up box.
+    std::string message = "Found no parts in " + database_directory_;
+    QMessageBox::warning(this, "Database Communication Error", QString::fromStdString(message));
+  }
+  else
+  {
+    for (auto& part : part_dirs)
+    {
+      // Gui display listing parts to user
+      QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(part.stem().string()));
+      item->setData(Qt::ItemDataRole::UserRole, QVariant(QString::fromStdString(part.stem().string())));
+      ui_->list_widget_parts->addItem(item);
+    }
+  }
+  return;
 }
 
 void CRSApplicationWidget::onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem*)

@@ -152,7 +152,7 @@ Use the GUI to define the properties of a new part or modify those of an existin
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="push_button_load_parts_from_database">
+               <widget class="QPushButton" name="push_button_refresh_part_list">
                 <property name="text">
                  <string>Refresh Parts List</string>
                 </property>
