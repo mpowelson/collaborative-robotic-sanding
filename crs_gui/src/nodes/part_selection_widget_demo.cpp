@@ -28,7 +28,7 @@ int main(int argc, char** argv)
   // Create and start the Qt application
   QApplication app(argc, argv);
 
-  auto widget = std::make_unique<crs_gui::PartSelectionWidget>(node);
+  auto widget = std::make_unique<crs_gui::PartSelectionWidget>();
   widget->show();
 
   app.exec();
