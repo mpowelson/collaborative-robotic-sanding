@@ -77,35 +77,11 @@
          <property name="title">
           <string>2. Load Part</string>
          </property>
-         <widget class="QWidget" name="layoutWidget">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>529</width>
-            <height>194</height>
-           </rect>
-          </property>
-          <layout class="QHBoxLayout" name="horizontal_layout_parts">
-           <item>
-            <widget class="QListWidget" name="list_widget_parts"/>
-           </item>
-           <item>
-            <widget class="Line" name="line_4">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QTextEdit" name="text_edit_part_description">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <layout class="QVBoxLayout" name="vertical_layout_part_selector"/>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
