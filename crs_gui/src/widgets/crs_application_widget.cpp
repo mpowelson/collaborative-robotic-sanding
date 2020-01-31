@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Southwest Research Institute
+ * Copyright 2019 Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,639 +14,639 @@
  * limitations under the License.
  */
 
-#include "crs_gui/widgets/crs_application_widget.h"
-
-#include <map>
-#include <regex>
-#include <string>
-
-#include <QFileDialog>
-#include <QMessageBox>
-//#include <QSqlField>
-//#include <QSqlRecord>
-#include <QTableView>
-
-#include <boost/filesystem.hpp>
-
-//#include <geometric_shapes/mesh_operations.h>
-//#include <geometric_shapes/shape_operations.h>
-//#include <ros/console.h>
-
-//#include "opp_gui/utils.h"
-//#include "opp_gui/widgets/tool_path_editor_widget.h"
-//#include "opp_gui/widgets/touch_point_editor_widget.h"
 #include "ui_crs_application.h"
 
-const static std::string MESH_MARKER_TOPIC = "mesh_marker";
-const bool USE_DATABASE=false;
+#include <atomic>
+#include <QMessageBox>
+#include <QStateMachine>
+#include <QProgressBar>
+#include <QProgressDialog>
+
+#include <crs_gui/widgets/crs_application_widget.h>
+
+//#include "application_state_properties_impl.h"
+//#include <rpgatta_application/application/application_context_base.h>
+//#include <rpgatta_gui/application_state_machine.h>
+//#include <rpgatta_gui/widgets/application_widget_base.h>
+//#include <rpgatta_gui/widgets/database_selection_widget.h>
+//#include <rpgatta_gui/widgets/trajectory_approval_widget.h>
+//#include <rpgatta_gui/widgets/manual_manipulation_widget.h>
+//#include <rpgatta_gui/widgets/database_log_widget.h>
+//#include <rpgatta_msgs/LetUserJogRobot.h>
+
+const static std::string TRAJECTORY_PREVIEW_TOPIC = "trajectory_preview";
+const static std::string STATE_PREVIEW_TOPIC = "state_preview";
+const static std::string APPROVAL_ACTION = "trajectory_approval";
+
+const static std::string ALLOW_OPERATOR_CONTROL_SERVICE = "allow_operator_control";
 
 namespace crs_gui
 {
+
 CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
-                                           QWidget* parent,
-                                           std::string database_directory)
-  : QWidget(parent), ui_(new Ui::CRSApplication), node_(node), database_directory_(database_directory)
+                                       QWidget* parent,
+                                       std::string database_directory)
+  : QWidget(parent), ui_(new Ui::CRSApplication)
+//  , user_control_action_server_(ALLOW_OPERATOR_CONTROL_SERVICE, boost::bind(&CRSApplicationWidget::userControlCallback, this, _1), false)
+//  , app_(app)
 {
   ui_->setupUi(this);
 
-//  // Add the available tf frame
-//  if (!frames.empty())
-//  {
-//    marker_frame_ = frames.front();
-//  }
-//  else
-//  {
-//    ROS_ERROR_STREAM("No visualization frames available.  Using \"map\" instead.");
-//    marker_frame_ = "map";
-//  }
+//  // Set the application callback functions
+//  app_->setRemovePartCallback(boost::bind(&CRSApplicationWidget::onPartRemoved, this, _1));
+//  app_->setActivePartSetCallback(boost::bind(&CRSApplicationWidget::onActivePartSet, this, _1, _2));
 
-//  // Create the other widgets
-//  touch_point_editor_ = new TouchPointEditorWidget(this, nh_, marker_frame_);
-//  verification_point_editor_ = new TouchPointEditorWidget(this, nh_, marker_frame_);
-//  tool_path_editor_ = new ToolPathEditorWidget(this, nh_, marker_frame_);
+//  // Create the widgets
+//  part_selector_widget_ = new PartSelectorWidget(app_, center_of_workcell, this);
+//  job_selector_widget_ = new JobSelectorWidget(app_, this);
+//  trajectory_approval_widget_ = new TrajectoryApprovalWidget(TRAJECTORY_PREVIEW_TOPIC,
+//                                                                     STATE_PREVIEW_TOPIC,
+//                                                                     APPROVAL_ACTION, this);
 
-//  // Set the color of the touch point markers
-//  touch_point_editor_->setMarkerColor(1.0, 0.0, 0.0);
-//  verification_point_editor_->setMarkerColor(0.0, 0.0, 1.0);
+//  manual_manipulation_widget_ = new ManualManipulationWidget();
 
-//  // Add the widgets to the appropriate frames
-//  {
-//    // Touch point editor
-//    QVBoxLayout* layout = new QVBoxLayout();
-//    layout->addWidget(touch_point_editor_);
-//    ui_->frame_define_touch_off_points->setLayout(layout);
-//  }
-//  {
-//    // Verification point editor
-//    QVBoxLayout* layout = new QVBoxLayout();
-//    layout->addWidget(verification_point_editor_);
-//    ui_->frame_define_verification_points->setLayout(layout);
-//  }
-//  {
-//    // Tool path editor
-//    QVBoxLayout* layout = new QVBoxLayout();
-//    layout->addWidget(tool_path_editor_);
-//    ui_->frame_define_toolpaths->setLayout(layout);
-//  }
+//  database_log_widget_ = new DatabaseLogWidget(app_, this);
 
-//  // Disable the "downstream" tabs until a model is loaded
-//  setModelTabsEnabled(false);
-//  setJobTabsEnabled(false, false);
+//  progress_bar_ = new QProgressBar(this);
+//  progress_bar_->setRange(0, 100);
+//  progress_bar_->setValue(0);
 
-  //  // Connect the signals and slots
-  //  connect(ui_->push_button_find_model_file, &QPushButton::clicked, this,
-  //  &ToolPathPlannerWidget::browseForMeshResource);
-  connect(ui_->push_button_refresh_part_list, &QPushButton::clicked, this, &CRSApplicationWidget::refreshPartsList);
-  refreshPartsList();
-  connect(
-      ui_->list_widget_parts, &QListWidget::currentItemChanged, this, &CRSApplicationWidget::onModelSelectionChanged);
-  connect(ui_->push_button_load_selected_part, &QPushButton::clicked, this, &CRSApplicationWidget::loadSelectedPart);
-  //  connect(ui_->push_button_save_entry, &QPushButton::clicked, this, &ToolPathPlannerWidget::saveModel);
+//  // Add the widgets to the UI
+//  ui_->vertical_layout_part_selector->addWidget(part_selector_widget_);
+//  ui_->vertical_layout_job_selector->addWidget(job_selector_widget_);
+//  ui_->vertical_layout_preview_approval->addWidget(trajectory_approval_widget_);
+//  ui_->vertical_layout_localize->addWidget(progress_bar_);
+//  ui_->vertical_layout_manipulation->addWidget(manual_manipulation_widget_);
+//  ui_->vertical_layout_log->addWidget(database_log_widget_);
+  
+//  // Create the state machine to manage the UI behavior
+//  createStateMachine();
 
-  //  // Signals & slots for the buttons on job definition page
-  //  connect(ui_->push_button_new_job, &QPushButton::clicked, this, &ToolPathPlannerWidget::newJob);
-  //  connect(ui_->push_button_load_jobs_from_database,
-  //          &QPushButton::clicked,
-  //          this,
-  //          &ToolPathPlannerWidget::loadJobsFromDatabase);
-  //  connect(ui_->list_widget_jobs, &QListWidget::currentItemChanged, this,
-  //  &ToolPathPlannerWidget::onJobSelectionChanged); connect(ui_->push_button_load_selected_job, &QPushButton::clicked,
-  //  this, &ToolPathPlannerWidget::loadSelectedJob); connect(ui_->push_button_save_job, &QPushButton::clicked, this,
-  //  &ToolPathPlannerWidget::saveJob);
+//  // Connect the signals and slots
+//  connect(trajectory_approval_widget_, &TrajectoryApprovalWidget::recievedTrajectory, this, &CRSApplicationWidget::showTrajectory);
+//  connect(trajectory_approval_widget_, &TrajectoryApprovalWidget::approved, this, &CRSApplicationWidget::hideTrajectory);
+//  connect(trajectory_approval_widget_, &TrajectoryApprovalWidget::rejected, this, &CRSApplicationWidget::hideTrajectory);
 
-  //  // Signals & Slots for the Buttons on database management page
-  //  connect(ui_->push_button_show_part, &QPushButton::clicked, this, &ToolPathPlannerWidget::showPartFromDatabase);
-  //  connect(ui_->push_button_suppress_part, &QPushButton::clicked, this, &ToolPathPlannerWidget::deletePart);
-  //  connect(ui_->push_button_suppress_job, &QPushButton::clicked, this, &ToolPathPlannerWidget::deleteJob);
-  //  connect(ui_->push_button_refresh_parts, &QPushButton::clicked, this, &ToolPathPlannerWidget::refresh);
-  //  connect(ui_->push_button_refresh_jobs, &QPushButton::clicked, this, &ToolPathPlannerWidget::refresh);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::showWarningDialog, this, &CRSApplicationWidget::onShowWarningDialog);
 
-    // Add a publisher for the mesh marker
-  marker_pub_.reset();
-  marker_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(MESH_MARKER_TOPIC, 1);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::reset, this, &CRSApplicationWidget::resetToCurrentStateManipulationWidget);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::show, this, &CRSApplicationWidget::showManipulationWidget);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::hide, this, &CRSApplicationWidget::hideManipulationWidget);
 
-  //  // Set up the Database views in the third page
-  //  std::string query = "`suppressed`!=\"1\"";
-  //  model_parts_ = new QSqlTableModel(this, database_.getDatabase());
-  //  model_parts_->setTable(QString::fromStdString(opp_db::PARTS_TABLE_NAME));
-  //  model_parts_->setEditStrategy(QSqlTableModel::OnManualSubmit);
-  //  model_parts_->select();
-  //  model_parts_->setFilter(QString::fromStdString(query));
-  //  model_parts_->removeColumn(model_parts_->columnCount() - 1);  // don't show the 'suppressed' column
-  //  model_jobs_ = new QSqlTableModel(this, database_.getDatabase());
-  //  model_jobs_->setTable(QString::fromStdString(opp_db::JOBS_TABLE_NAME));
-  //  model_jobs_->setEditStrategy(QSqlTableModel::OnManualSubmit);
-  //  model_jobs_->select();
-  //  model_jobs_->setFilter(QString::fromStdString(query));
-  //  model_jobs_->removeColumn(model_jobs_->columnCount() - 1);  // don't show the 'suppressed' column
-  //  // Attach them to the views
-  //  ui_->table_view_parts->setModel(model_parts_);
-  //  ui_->table_view_parts->setEditTriggers(QTableView::NoEditTriggers);  // Make read only
-  //  ui_->table_view_parts->show();
-  //  ui_->table_view_jobs->setModel(model_jobs_);
-  //  ui_->table_view_jobs->setEditTriggers(QTableView::NoEditTriggers);  // Make read only
-  //  ui_->table_view_jobs->show();
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::showCartesianManipulation, this, &CRSApplicationWidget::showCartesianManipulationWidget);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::hideCartesianManipulation, this, &CRSApplicationWidget::hideCartesianManipulationWidget);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::showJointManipulation, this, &CRSApplicationWidget::showJointManipulationWidget);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::hideJointManipulation, this, &CRSApplicationWidget::hideJointManipulationWidget);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::manipulatorChanged, this, &CRSApplicationWidget::manipulatorChangedManipulationWidget);
+//  connect(manual_manipulation_widget_, &ManualManipulationWidget::tcpLinkChanged, this, &CRSApplicationWidget::tcpLinkChangedManipulationWidget);
+
+//  connect(part_selector_widget_, &PartSelectorWidget::okToProceed, this, &CRSApplicationWidget::onPartSelectionStatusChanged);
+//  connect(job_selector_widget_, &JobSelectorWidget::okToProceed, this, &CRSApplicationWidget::onJobSelectionStatusChanged);
+
+//  connect(ui_->push_button_scan_booth, &QPushButton::clicked, this, &CRSApplicationWidget::onScanBooth);
+//  connect(ui_->push_button_align_to_scan, &QPushButton::clicked, this, &CRSApplicationWidget::onAlignToScan);
+//  connect(ui_->push_button_start_localization, &QPushButton::clicked, this, &CRSApplicationWidget::onStartLocalization);
+//  connect(ui_->push_button_verify_localization, &QPushButton::clicked, this, &CRSApplicationWidget::onStartLocalizationVerification);
+//  connect(ui_->push_button_load_localization, &QPushButton::clicked, this, &CRSApplicationWidget::onLoadLocLog);
+//  connect(ui_->push_button_detailed_scan, &QPushButton::clicked, this, &CRSApplicationWidget::onDetailedScanLoc);
+
+//  connect(ui_->push_button_plan, &QPushButton::clicked, this, &CRSApplicationWidget::onPlanJob);
+//  connect(ui_->push_button_execute, &QPushButton::clicked, this, &CRSApplicationWidget::onExecuteJob);
+//  connect(ui_->push_button_safe_go_home, &QPushButton::clicked, this, &CRSApplicationWidget::onSafelyGoHome);
+//  connect(ui_->push_button_cancel_current_task, &QPushButton::clicked, this, &CRSApplicationWidget::onCancelCurrentTask);
+
+//  connect(this, &CRSApplicationWidget::planComplete, this, &CRSApplicationWidget::onApproveJob);
+//  connect(this, &CRSApplicationWidget::showWarningDialog, this, &CRSApplicationWidget::onShowWarningDialog);
+//  connect(this, &CRSApplicationWidget::showInfoDialog, this, &CRSApplicationWidget::onShowInfoDialog);
+//  connect(this, &CRSApplicationWidget::updateProgressBar, this, &CRSApplicationWidget::onUpdateProgressBar);
+
+//  // Start the user control action server
+//  user_control_action_server_.start();
 }
 
-void CRSApplicationWidget::setVisualizationFrame(const QString& text)
+void CRSApplicationWidget::createStateMachine()
 {
-//  marker_frame_ = text.toStdString();
-//  touch_point_editor_->setMarkerFrame(marker_frame_);
-//  verification_point_editor_->setMarkerFrame(marker_frame_);
-//  tool_path_editor_->setMarkerFrame(marker_frame_);
+//  sm_ = new QStateMachine(this);
+
+  /* Create the states of the state machine.
+   *
+   * The states below are defined in sequential order, and a given state's parent should be the
+   * previously defined state's meta-state (or the state machine in the case of the first state)
+   *
+   * Note: Seeing weird behavior when using QPushButton clicked signal to trigger state machine transition.
+   * Better behavior when using pressed signal instead
+   */
+//  NestedState select_part ("select_part",
+//                           sm_,
+//                           this, SIGNAL(noPartSelected()));
+
+//  NestedState localization_ready ("localization_ready",
+//                                  select_part.meta_state,
+//                                  this, SIGNAL(partSelected()));
+
+//  NestedState localization_started ("localization_started",
+//                                    localization_ready.meta_state,
+//                                    ui_->push_button_start_localization, SIGNAL(released()));
+
+//  NestedState verification_ready ("verification_ready",
+//                                  localization_started.meta_state,
+//                                  this, SIGNAL(partLocalized()));
+
+//  NestedState verification_started ("verification_started",
+//                                    verification_ready.meta_state,
+//                                    ui_->push_button_verify_localization, SIGNAL(released()));
+
+//  NestedState verification_complete ("verification_complete",
+//                                     verification_started.meta_state,
+//                                     this, SIGNAL(partLocalizationVerified()));
+
+//  NestedState select_job ("select_job",
+//                          verification_complete.meta_state,
+//                          this, SIGNAL(noJobSelected()));
+
+//  NestedState planning_ready("planning_ready",
+//                             select_job.meta_state,
+//                             this, SIGNAL(jobSelected()));
+
+//  NestedState planning_started ("planning_started",
+//                                planning_ready.meta_state,
+//                                ui_->push_button_plan, SIGNAL(released()));
+
+//  NestedState approve_trajectory("approve_trajectory",
+//                                 planning_started.meta_state,
+//                                 this, SIGNAL(planComplete()));
+
+//  NestedState execution_ready ("execution_ready",
+//                               approve_trajectory.meta_state,
+//                               this, SIGNAL(jobApproved()));
+
+//  NestedState execution_started ("execution_started",
+//                                 execution_ready.meta_state,
+//                                 ui_->push_button_execute, SIGNAL(released()));
+
+//  NestedState execution_complete ("execution_complete",
+//                                  execution_started.meta_state,
+//                                  this, SIGNAL(executionComplete()));
+
+//  // Since rpgatta_4702 does not currently have detailed scan capability,
+//  // check whether we are on that robot.  This result will be used to
+//  // enable or disable the detailed scan button.
+//  ROS_ERROR_STREAM(app_->getRobotId().c_str());
+//  bool use_detailed_scan = (app_->getRobotId() != std::string("rpgatta_4702"));
+//  ROS_ERROR_STREAM(use_detailed_scan);
+
+//  // Assign properties to the UI for each state (i.e. buttons/tabs enabled, colors, etc.)
+//  assignPropertiesSelectPartState(select_part.state, ui_, use_detailed_scan);
+//  assignPropertiesLocalizationReadyState(localization_ready.state, ui_, use_detailed_scan);
+//  assignPropertiesLocalizationStartedState(localization_started.state, ui_, use_detailed_scan);
+//  assignPropertiesVerificationReadyState(verification_ready.state, ui_, use_detailed_scan);
+//  assignPropertiesVerificationStartedState(verification_started.state, ui_, use_detailed_scan);
+//  assignPropertiesVerificationCompleteState(verification_complete.state, ui_, use_detailed_scan);
+//  assignPropertiesSelectJobState(select_job.state, ui_, use_detailed_scan);
+//  assignPropertiesPlanningReadyState(planning_ready.state, ui_, use_detailed_scan);
+//  assignPropertiesPlanningStartedState(planning_started.state, ui_, use_detailed_scan);
+//  assignPropertiesApproveTrajectoryState(approve_trajectory.state, ui_, use_detailed_scan);
+//  assignPropertiesExecutionReadyState(execution_ready.state, ui_, use_detailed_scan);
+//  assignPropertiesExecutionStartedState(execution_started.state, ui_, use_detailed_scan);
+//  assignPropertiesExecutionCompleteState(execution_complete.state, ui_, use_detailed_scan);
+
+//  // Create a queue of states, ordered in the correct sequence from first to last
+//  std::queue<NestedState> states;
+//  states.push(select_part);
+//  states.push(localization_ready);
+//  states.push(localization_started);
+//  states.push(verification_ready);
+//  states.push(verification_started);
+//  states.push(verification_complete);
+//  states.push(select_job);
+//  states.push(planning_ready);
+//  states.push(planning_started);
+//  states.push(approve_trajectory);
+//  states.push(execution_ready);
+//  states.push(execution_started);
+//  states.push(execution_complete);
+
+//  createNestedSequentialStateMachine(sm_, states);
+
+//  sm_->setInitialState(select_part.meta_state);
+//  sm_->start();
 }
 
-// Parts Page
-void CRSApplicationWidget::browseForMeshResource()
+//void CRSApplicationWidget::userControlCallback(const rpgatta_msgs::AllowUserControlGoalConstPtr& goal)
+//{
+  // Create a thread-safe variable to keep track of the state of the window
+//  std::atomic<bool> done (false);
+
+//  // Create an inline "slot" that sets the done flag to true when the dialog window is closed
+//  connect(this, &CRSApplicationWidget::warningDialogClosed, [&done]()
+//  {
+//    done = true;
+//  });
+
+//  /* Since this method will be called by the ROS thread (because it is a ROS service callback), emit a signal
+//   * to have the GUI thread bring up a dialog box */
+//  emit showWarningDialog("User Drive", "You may now drive the robot manually. Close this window when you are finished moving the robot.\n\nPoint Description:\n" + QString::fromStdString(goal->message));
+
+//  // Wait for the done flag to get set true
+//  while(!done)
+//  {
+//    ROS_DEBUG_STREAM_THROTTLE(2.0, "Waiting for user to relinquish control of the robot...");
+//  }
+
+//  rpgatta_msgs::AllowUserControlResult result;
+//  result.success = true;
+//  result.message = "Done";
+
+//  user_control_action_server_.setSucceeded(result);
+//}
+
+
+void CRSApplicationWidget::onPartSelectionStatusChanged(const bool status)
 {
-//  QString filename = QFileDialog::getOpenFileName(this, "Load Model", "", "Mesh Files (*.stl *.ply *.obj)");
-//  if (filename.isEmpty())
-//  {
-//    ROS_WARN_STREAM(__func__ << ": Empty filename");
-//    return;
-//  }
 
-//  ui_->line_edit_model_filename->setText(filename);
-//  loadMeshFromResource();
-//  return;
-}
-
-void CRSApplicationWidget::loadMeshFromResource()
-{
-//  // Get the filename and package of the model
-//  std::string filename = ui_->line_edit_model_filename->text().toStdString();
-//  if (filename.empty())
-//  {
-//    QMessageBox::warning(this, "Input Error", "Model filename or package name not specified");
-//    return;
-//  }
-
-//  // Construct the mesh resource name using the package and filename
-//  std::vector<std::string> file_extensions = { ".stl", ".ply", ".obj" };
-
-//  mesh_resource_.clear();
-//  for (const std::string& ext : file_extensions)
-//  {
-//    std::regex rgx(".*" + ext + "$");
-//    std::smatch match;
-//    if (std::regex_search(filename, match, rgx))
-//    {
-//      mesh_resource_ = "file://" + filename;
-//      break;
-//    }
-//  }
-
-//  if (mesh_resource_.empty())
-//  {
-//    std::string message = "Invalid mesh resource file extension. Acceptable inputs are: ";
-//    for (const std::string& ext : file_extensions)
-//      message += ext + " ";
-
-//    QMessageBox::warning(this, "Input Error", QString(message.c_str()));
-//    return;
-//  }
-//  ROS_INFO_STREAM("Attempting to load mesh from resource: '" << mesh_resource_ << "'");
-
-//  if (!loadMesh())
-//    return;
-}
-
-void CRSApplicationWidget::refreshPartsList()
-{
-  using namespace boost::filesystem;
-  std::vector<path> part_dirs;
-  for ( directory_iterator itr(database_directory_); itr!=directory_iterator(); itr++)
+////  else  if(status)
   {
-    if (is_directory(itr->path()))
-      part_dirs.push_back(itr->path());
+    emit partSelected();
   }
+//  {
+//    emit noPartSelected();
+//  }
 
-  // Retrieve part info from the database
-  if (!part_dirs.size())
+  // TODO: update the job selection widget to already have the right part selected (and others disabled?)
+}
+
+void CRSApplicationWidget::onPartRemoved(const bool success)
+{
+  emit noPartSelected();
+  if(!success)
   {
-    // If the function failed, create a warning pop-up box.
-    std::string message = "Found no parts in " + database_directory_;
-    QMessageBox::warning(this, "Database Communication Error", QString::fromStdString(message));
+    emit showWarningDialog("Part Removed", "Failed to remove selected part from the planning environment");
+  }
+}
+
+void CRSApplicationWidget::onSafelyGoHome()
+{
+//  rpgatta_application::NotifyCBType notify_cb =
+//      boost::bind(&CRSApplicationWidget::onSafelyWentHome, this, _1);
+
+//  rpgatta_application::TaskResponse res = app_->safelyGoHome(notify_cb);
+//  if (!res.success)
+//  {
+//    QMessageBox::warning(this, "Retreat to Home Error", QString::fromStdString(res.message));
+////    emit partSelected(); // Send to the simplest state that includes a part collision model
+//    return;
+//  }
+}
+
+void CRSApplicationWidget::onSafelyWentHome(const bool success)
+{
+  if(!success)
+  {
+//    emit partSelected(); // Send to the simplest state that includes a part collision model
+    emit showWarningDialog("Retreat to Home Error", "Failed to safely go home");
   }
   else
   {
-    for (auto& part : part_dirs)
-    {
-      // Gui display listing parts to user
-      QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(part.stem().string()));
-      item->setData(Qt::ItemDataRole::UserRole, QVariant(QString::fromStdString(part.stem().string())));
-      ui_->list_widget_parts->addItem(item);
-    }
+//    emit partSelected(); // Send to the simplest state that includes a part collision model
+    emit showInfoDialog("Retreat to Home", "Safely sent robot home");
+  }
+}
+
+void CRSApplicationWidget::onScanBooth()
+{
+//  rpgatta_application::NotifyCBType notify_cb =
+//      boost::bind(&CRSApplicationWidget::onScanBoothComplete, this, _1);
+
+//  rpgatta_application::TaskResponse res = app_->scanBooth(notify_cb);
+//  if (!res.success)
+//  {
+//    QMessageBox::warning(this, "Booth Scan Error", QString::fromStdString(res.message));
+//  }
+//  return;
+}
+
+void CRSApplicationWidget::onScanBoothComplete(const bool success)
+{
+  if (success)
+  {
+    emit showInfoDialog("Booth Scan", "Completed Booth Scan");
+  }
+  else
+  {
+    emit showWarningDialog("Booth Scan", "Booth Scan Failed");
   }
   return;
 }
 
-void CRSApplicationWidget::onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem*)
+void CRSApplicationWidget::onAlignToScan()
 {
-  // Change the description display based on which part is selected
-  if (current != nullptr)
+//  rpgatta_application::NotifyCBType notify_cb =
+//      boost::bind(&CRSApplicationWidget::onLocalizationComplete, this, _1);
+
+//  rpgatta_application::TaskResponse res = app_->alignToScan(notify_cb);
+//  if (!res.success)
+//  {
+//    QMessageBox::warning(this, "Alignment to Scan Error", QString::fromStdString(res.message));
+//  }
+//  else {
+//    emit updateProgressBar(50);
+//  }
+//  return;
+}
+
+void CRSApplicationWidget::onStartLocalization()
+{
+//  QMessageBox::StandardButton reply;
+
+//  reply = QMessageBox::question(this, "Proceed", "Are you sure you want to manually localize part?", QMessageBox::Yes | QMessageBox::No);
+//  if(reply == QMessageBox::No)
+//  {
+//    emit partSelected();
+//    return;
+//  }
+//  rpgatta_application::NotifyCBType notify_cb =
+//      boost::bind(&CRSApplicationWidget::onLocalizationComplete, this, _1);
+
+//  rpgatta_application::PercentageFeedbackCBType feedback_cb =
+//      boost::bind(&CRSApplicationWidget::onLocalizationFeedback, this, _1);
+
+//  rpgatta_application::TaskResponse res = app_->localizePart(notify_cb, feedback_cb);
+//  if(!res.success)
+//  {
+//    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
+//    emit partSelected();
+//  }
+}
+
+void CRSApplicationWidget::onLoadLocLog()
+{
+//  rpgatta_application::NotifyCBType notify_cb =
+//      boost::bind(&CRSApplicationWidget::onLocalizationComplete, this, _1);
+
+//  rpgatta_application::TaskResponse res = app_->getLocLog(notify_cb);
+//  if(!res.success)
+//  {
+//    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
+//    emit partSelected();
+//  }
+}
+
+void CRSApplicationWidget::onDetailedScanLoc()
+{
+//  rpgatta_application::NotifyCBType notify_cb =
+//      boost::bind(&CRSApplicationWidget::onLocalizationComplete, this, _1);
+
+//  rpgatta_application::TaskResponse res = app_->detailedScanLoc(notify_cb);
+//  if(!res.success)
+//  {
+//    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
+//    emit partSelected();
+//  }
+}
+
+void CRSApplicationWidget::onLocalizationFeedback(const int pct_complete)
+{
+  emit updateProgressBar(static_cast<int>(pct_complete));
+}
+
+void CRSApplicationWidget::onLocalizationComplete(const bool success)
+{
+  emit updateProgressBar(100);
+  if(!success)
   {
-    ui_->text_edit_part_description->setText(current->data(Qt::ItemDataRole::UserRole).toString());
+    emit partSelected();
+    emit showWarningDialog("Localization Error", "Failed to localize part");
+  }
+  else
+  {
+    emit partLocalized();
+    emit showInfoDialog("Localization Complete", "Part successfully localized");
+  }
+
+  emit updateProgressBar(0);
+}
+
+void CRSApplicationWidget::onStartLocalizationVerification()
+{
+//  rpgatta_application::NotifyCBType notify_cb =
+//      boost::bind(&CRSApplicationWidget::onLocalizationVerificationComplete, this, _1);
+
+//  rpgatta_application::PercentageFeedbackCBType feedback_cb =
+//      boost::bind(&CRSApplicationWidget::onLocalizationVerificationFeedback, this, _1);
+
+//  rpgatta_application::TaskResponse res = app_->verifyPartLocalization(notify_cb, feedback_cb);
+//  if(!res.success)
+//  {
+//    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
+//    emit partLocalized();
+//  }
+}
+
+void CRSApplicationWidget::onLocalizationVerificationFeedback(const int pct_complete)
+{
+  emit updateProgressBar(static_cast<int>(pct_complete));
+}
+
+void CRSApplicationWidget::onLocalizationVerificationComplete(const bool success)
+{
+  if(!success)
+  {
+    emit partLocalized();
+    emit showWarningDialog("Localization Verification Error", "Failed to verify part localization");
+  }
+  else
+  {
+    emit partLocalizationVerified();
+    emit showInfoDialog("Localization Verification Complete", "Successfully verified part localization");
+//    job_selector_widget_->onPartSelect();
+  }
+
+  emit updateProgressBar(0);
+}
+
+void CRSApplicationWidget::onJobSelectionStatusChanged(const bool status)
+{
+  if(status)
+  {
+    emit jobSelected();
   }
 }
 
-void CRSApplicationWidget::loadSelectedPart()
+void CRSApplicationWidget::onPlanJob()
 {
-//  int row = ui_->list_widget_parts->currentRow();
-//  if (row >= 0 && row < static_cast<int>(existing_parts_.size()))
+  // Add a progress bar to let the user know something is happening
+  progress_dialog_ = new QProgressDialog(this);
+  progress_dialog_->setModal(true);
+  progress_dialog_->setLabelText("Motion Planning Progress");
+  progress_dialog_->setMinimum(0);
+  progress_dialog_->setMaximum(100);
+  progress_dialog_->setValue(progress_dialog_->minimum());
+  progress_dialog_->setCancelButton(nullptr);   // TODO: Connect to cancel action
+  progress_dialog_->hide();
+
+//  rpgatta_application::TaskResponse res = app_->planJob(boost::bind(&CRSApplicationWidget::onPlanJobComplete, this, _1));
+//  if(!res.success)
 //  {
-//    // Get the selected part information
-//    const opp_msgs::Part& part = existing_parts_[static_cast<std::size_t>(row)];
-//    generated_model_id_ = part.id;
-//    mesh_resource_ = part.mesh_resource;
+//    emit jobSelected();
+//    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
+//  }
+//  else {
+//    progress_dialog_->show();
+//  }
+}
 
-//    if (!loadMesh())
-//      return;
+void CRSApplicationWidget::onPlanJobComplete(const bool success)
+{
+  // Be really careful about null pointers here, as it is easy for someone to 'x out' of the popup
+  int i = 0;
+  if (progress_dialog_ != nullptr)
+  {
+    i = progress_dialog_->value();
+  }
+  for (/*i already declared*/; progress_dialog_ != nullptr && i < progress_dialog_->maximum(); ++i)
+  {
+    progress_dialog_->setValue(i);
+//    ros::Duration(0.01).sleep();
+  }
+  if (progress_dialog_ != nullptr)
+  {
+    progress_dialog_->hide();
+  }
 
-//    // Update the UI and widgets with all part information
-//    ui_->line_edit_model_name->setText(QString::fromStdString(part.name));
-//    ui_->plain_text_edit_model_description->setPlainText(QString::fromStdString(part.description));
+  if(!success)
+  {
+    emit jobSelected();
+    emit showWarningDialog("Process Plan Error", "Failed to create process plan for selected job");
+  }
+  else
+  {
+    emit planComplete();
+    emit showInfoDialog("Process Plan Complete", "Successfully completed process motion plan for selected job");
+  }
+}
 
-//    touch_point_editor_->setPoints(part.touch_points);
-//    verification_point_editor_->setPoints(part.verification_points);
+void CRSApplicationWidget::onApproveJob()
+{
+//  rpgatta_application::TaskResponse res = app_->approveJob(boost::bind(&CRSApplicationWidget::onApproveJobComplete, this, _1));
+//  if(!res.success)
+//  {
+//    // TODO: need to emit a signal here to go into a different state?
 
-//    setJobTabsEnabled(false, true);
-//    loadJobsFromDatabase();
+//    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
+//  }
+}
+
+void CRSApplicationWidget::onApproveJobComplete(const bool approved)
+{
+  if(approved)
+  {
+    emit jobApproved();
+    showWarningDialog("Trajectory Approved","Should now be able to execute");
+    ui_->push_button_execute->setEnabled(true); // this should not need to be here, assignPropertiesExecutionReadyState sets true already
+    ui_->tab_execution->setEnabled(true); // this should not need to be here, assignPropertiesExecutionReadyState sets true already
+  }
+  else
+  {
+    // TODO: need to emit a signal here to go into a different state?
+
+    emit showWarningDialog("Trajectory Rejected", "The robot trajectories in this job have been rejected. Please attempt to re-plan with different parameters");
+  }
+}
+
+void CRSApplicationWidget::onExecuteJob()
+{
+//  rpgatta_application::TaskResponse job_log_res = app_->addJobLog();
+//  if (job_log_res.success)
+//  {
+//    ROS_INFO_STREAM(job_log_res.message);
 //  }
 //  else
 //  {
-//    QMessageBox::warning(this, "Input Error", "Make a selection in the parts list");
+//    ROS_ERROR_STREAM(job_log_res.message);
+//  }
+
+//  rpgatta_application::TaskResponse res = app_->executeJob(boost::bind(&CRSApplicationWidget::onExecuteJobComplete, this, _1));
+//  if(!res.success)
+//  {
+//    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
+//    emit planComplete();
 //  }
 }
 
-void CRSApplicationWidget::saveModel()
+void CRSApplicationWidget::onExecuteJobComplete(const bool success)
 {
-//  // Verify that the user intended to save the part
-//  QMessageBox::StandardButton button =
-//      QMessageBox::question(this, "Save Part to Database", "Proceed with adding the defined part to the database?");
-//  if (button == QMessageBox::StandardButton::No)
-//    return;
-
-//  // Get the relevant model information to save and verify it exists
-//  std::string model_name = ui_->line_edit_model_name->text().toStdString();
-//  std::string model_description = ui_->plain_text_edit_model_description->toPlainText().toStdString();
-//  if (model_name.empty() || model_description.empty())
-//  {
-//    QMessageBox::warning(this, "Input Error", "Model ID or description field(s) is empty");
-//    return;
-//  }
-
-//  // Get the touch points and verification points, and make sure there are
-//  // at least 3 of each.  (This requirement could probably be relaxed.)
-//  using TouchPointMap = std::map<std::string, opp_msgs::TouchPoint>;
-//  TouchPointMap touch_points = touch_point_editor_->getPoints();
-//  TouchPointMap verification_points = verification_point_editor_->getPoints();
-//  if (touch_points.size() < 3 || verification_points.size() < 3)
-//  {
-//    QMessageBox::warning(
-//        this, "Invalid Model Definition", "Ensure at least 3 touch points and 3 verification points have been defined");
-//    return;
-//  }
-
-//  // Fill out the part struct with input information
-//  opp_msgs::Part part;
-//  part.name = model_name;
-//  part.description = model_description;
-//  part.mesh_resource = mesh_resource_;
-
-//  // Copy the touch points
-//  part.touch_points.reserve(touch_points.size());
-//  for (const std::pair<const std::string, opp_msgs::TouchPoint>& pair : touch_points)
-//  {
-//    part.touch_points.push_back(pair.second);
-//  }
-
-//  // Copy the verification points
-//  part.verification_points.reserve(verification_points.size());
-//  for (const std::pair<const std::string, opp_msgs::TouchPoint>& pair : verification_points)
-//  {
-//    part.verification_points.push_back(pair.second);
-//  }
-
-//  // Save the model to the database
-//  std::string error_msg;
-//  long int key = database_.addPartToDatabase(part, error_msg);
-//  if (key < 0)
-//  {
-//    // If the function failed, warn the user.
-//    std::string message = "Failed to add part to database, received error: " + error_msg;
-//    QMessageBox::warning(this, "Database Communication Error", QString(message.c_str()));
-//  }
-//  else
-//  {
-//    // Save the auto generated model id
-//    generated_model_id_ = key;
-
-//    // If the save is successful, allow the user to add job data for the part
-//    setJobTabsEnabled(true, true);
-
-//    // Make sure the database lists are updated
-//    refresh();
-//    loadModelsFromDatabase();
-//    loadJobsFromDatabase();
-//  }
-//  return;
+  if(!success)
+  {
+    emit showWarningDialog("Execution failure", "Failed to execute selected job");
+    emit planComplete();
+  }
+  else
+  {
+    emit showInfoDialog("Execution Complete", "Successfully executed selected job");
+    emit executionComplete();
+  }
 }
 
-// Jobs Page
-void CRSApplicationWidget::newJob()
+void CRSApplicationWidget::onShowWarningDialog(const QString& title,
+                                                const QString& text)
 {
-//  std::vector<opp_msgs::ToolPath> empty;
-//  tool_path_editor_->addToolPathData(empty);
-//  setJobTabsEnabled(true, true);
-//  return;
+  QMessageBox::warning(this, title, text);
+
+  // Emit a signal telling anyone who is listening (namely the userControlCallback method) that the dialog window has been closed
+  emit warningDialogClosed();
 }
 
-void CRSApplicationWidget::loadJobsFromDatabase()
+void CRSApplicationWidget::onShowInfoDialog(const QString& title,
+                                             const QString& text)
 {
-//  std::map<unsigned int, opp_msgs::Job> jobs_map;
-//  std::string message;
-//  if (!database_.getAllJobsFromDatabase(generated_model_id_, message, jobs_map))
-//  {
-//    QMessageBox::warning(this, "Database Error", "Could not load any jobs for this part");
-//    return;
-//  }
-//  existing_jobs_.clear();
-//  ui_->list_widget_jobs->clear();
-//  for (std::pair<unsigned int, opp_msgs::Job> job_with_id : jobs_map)
-//  {
-//    QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(job_with_id.second.name));
-//    item->setData(Qt::ItemDataRole::UserRole, QVariant(QString::fromStdString(job_with_id.second.description)));
-//    ui_->list_widget_jobs->addItem(item);
-//    existing_jobs_.push_back(job_with_id.second);
-//  }
-
-//  return;
+  QMessageBox::information(this, title, text);
 }
 
-void CRSApplicationWidget::onJobSelectionChanged(QListWidgetItem* current, QListWidgetItem* previous)
+void CRSApplicationWidget::onCancelCurrentTask()
 {
-//  (void)previous;
+//  app_->cancelAllTasks();
 
-//  // Change the description display
-//  if (current != nullptr)
-//  {
-//    ui_->text_edit_jobs->setText(current->data(Qt::ItemDataRole::UserRole).toString());
-//  }
-//  else
-//  {
-//    ui_->text_edit_jobs->setText(QString::fromStdString(std::string("")));
-//  }
-//  return;
+  // Enter the first state of the process
+  emit partSelected();
+
+  QMessageBox::information(this, "Cancel Task", "Current task has been cancelled");
 }
 
-void CRSApplicationWidget::loadSelectedJob()
+void CRSApplicationWidget::onUpdateProgressBar(const int value)
 {
-//  int row = ui_->list_widget_jobs->currentRow();
-//  if (row >= 0 && row < static_cast<int>(existing_jobs_.size()))
-//  {
-//    // Get the selected part information
-//    const opp_msgs::Job& job = existing_jobs_[static_cast<std::size_t>(row)];
-
-//    // Update the UI and widgets with all part information
-//    ui_->line_edit_job_name->setText(QString::fromStdString(job.name));
-//    ui_->plain_text_edit_job_description->setPlainText(QString::fromStdString(job.description));
-
-//    // Add the old paths to the tool path editor
-//    tool_path_editor_->addToolPathData(job.paths);
-
-//    setJobTabsEnabled(true, true);
-//  }
-//  else
-//  {
-//    QMessageBox::warning(this, "Input Error", "Make a selection in the jobs list");
-//  }
-//  return;
+  progress_bar_->setValue(value);
 }
 
-void CRSApplicationWidget::saveJob()
+void CRSApplicationWidget::onActivePartSet(const bool localized, const bool verified)
 {
-//  // Verify that the user intended to press this button
-//  QMessageBox::StandardButton button =
-//      QMessageBox::question(this, "Save Job to Database", "Proceed with adding the defined job to the database?");
-//  if (button == QMessageBox::StandardButton::No)
-//  {
-//    return;
-//  }
+  // Go to the first state
+  emit noPartSelected();
+  emit partSelected();
+//  job_selector_widget_->onPartSelect();
+  if(localized)
+  {
+    // Emit the required signals to get the state machine to the "localized" state
+    emit ui_->push_button_start_localization->released();
+    emit partLocalized();
 
-//  // Get the relevant job information to save, and ensure it is non-empty
-//  std::string job_name = ui_->line_edit_job_name->text().toStdString();
-//  std::string job_description = ui_->plain_text_edit_job_description->toPlainText().toStdString();
-//  if (job_name.empty() || job_description.empty())
-//  {
-//    QMessageBox::warning(this, "Input Error", "Job ID or description is invalid");
-//    return;
-//  }
-
-//  // Construct a job object
-//  opp_msgs::Job job;
-//  job.name = job_name;
-//  job.description = job_description;
-//  job.part_id = generated_model_id_;
-//  job.header.stamp = ros::Time::now();
-
-//  // Get the tool paths and add them to the job
-//  ToolPathDataMap tool_paths = tool_path_editor_->getToolPathData();
-//  job.paths.reserve(tool_paths.size());
-//  for (const std::pair<const std::string, opp_msgs::ToolPath>& pair : tool_paths)
-//  {
-//    job.paths.push_back(pair.second);
-//  }
-
-//  // Save the job to the database
-//  std::string error_msg;
-//  long int key = database_.addJobToDatabase(job, error_msg);
-//  if (key < 0)
-//  {
-//    // If the function failed, warn the user.
-//    std::string message = "Failed to add job to database, received error: " + error_msg;
-//    QMessageBox::warning(this, "Database Communication Error", QString(message.c_str()));
-//  }
-//  else
-//  {
-//    // update the database views
-//    refresh();
-//    loadJobsFromDatabase();
-//  }
-
-//  return;
+    if(verified)
+    {
+      // Emit the required signals to get the state machine to the "select job" state
+      emit ui_->push_button_verify_localization->released();
+      emit partLocalizationVerified();
+      emit noJobSelected();
+    }
+  }
 }
 
-// Database Management Page
-void CRSApplicationWidget::showPartFromDatabase()
+void CRSApplicationWidget::availableManipulatorsChangedManipulationWidget(QStringList manipulators)
 {
-//  // Get the part id of the currently selected row
-//  QModelIndex index = ui_->table_view_parts->currentIndex();
-//  QSqlRecord part_record = model_parts_->record(index.row());
-//  QSqlField part_id_field = part_record.field("part_id");
-//  QVariant part_id_value = part_id_field.value();
-//  unsigned int part_id = static_cast<unsigned int>(part_id_value.toInt());
-
-//  // Get the part definition from the database
-//  std::string msg;
-//  opp_msgs::Part part;
-//  if (!database_.getPartFromDatabase(part_id, msg, part))
-//  {
-//    ROS_ERROR_STREAM("could not load selected part, had error: " << msg);
-//    return;
-//  }
-
-//  // Set class parameters using the loaded part
-//  generated_model_id_ = part.id;
-//  mesh_resource_ = part.mesh_resource;
-
-//  if (!loadMesh())
-//    return;
-
-//  // Update the UI and widgets with all part information
-//  ui_->line_edit_model_name->setText(QString::fromStdString(part.name));
-//  ui_->plain_text_edit_model_description->setPlainText(QString::fromStdString(part.description));
-
-//  touch_point_editor_->setPoints(part.touch_points);
-//  verification_point_editor_->setPoints(part.verification_points);
-
-//  setJobTabsEnabled(false, true);
-//  loadJobsFromDatabase();
+//  manual_manipulation_widget_->setAvailableManipulators(manipulators);
 }
 
-void CRSApplicationWidget::deletePart()
+void CRSApplicationWidget::availableTCPLinksChangedManipulationWidget(QStringList tcp_links)
 {
-//  // Get the part id of the currently selected row
-//  QModelIndex index = ui_->table_view_parts->currentIndex();
-//  QSqlRecord part_record = model_parts_->record(index.row());
-//  QSqlField part_id_field = part_record.field("part_id");
-//  QVariant part_id_value = part_id_field.value();
-//  unsigned int part_id = static_cast<unsigned int>(part_id_value.toInt());
-
-//  // Suppress (but do not actually delete) the part
-//  std::string msg;
-//  if (!database_.suppressPart(part_id, msg))
-//  {
-//    ROS_ERROR_STREAM("could not suppress selected part, had error: " << msg);
-//  }
-
-//  // In case we have the to-be-suppressed part open, disable job creation.
-//  // They will have to save as a new part before creating a new job.
-//  if (part_id == generated_model_id_)
-//  {
-//    setModelTabsEnabled(false);
-//    setJobTabsEnabled(false, false);
-//  }
-
-//  // Refresh the various database displays to ensure no 'ghosts' remain.
-//  refresh();
-//  loadModelsFromDatabase();
-//  return;
+//  manual_manipulation_widget_->setAvailableTCPLinks(tcp_links);
 }
 
-void CRSApplicationWidget::deleteJob()
-{
-//  // Get the id of the currently selected row
-//  QModelIndex index = ui_->table_view_jobs->currentIndex();
-//  QSqlRecord job_record = model_jobs_->record(index.row());
-//  QSqlField id_field = job_record.field("id");
-//  QVariant id_value = id_field.value();
-//  unsigned int id = static_cast<unsigned int>(id_value.toInt());
-
-//  // Suppress (but do not actually delete) the job
-//  std::string msg;
-//  if (!database_.suppressJob(id, msg))
-//  {
-//    ROS_ERROR_STREAM("could not suppress selected job, had error: " << msg);
-//  }
-
-//  // Refresh the displays to chase out any 'ghosts'
-//  refresh();
-//  return;
-}
-
-void CRSApplicationWidget::refresh()
-{
-//  std::string query = "`suppressed`!=\"1\"";
-//  model_parts_->setFilter(QString::fromStdString(query));
-//  model_jobs_->setFilter(QString::fromStdString(query));
-
-//  model_parts_->select();
-//  model_jobs_->select();
-}
-
-// Private functions
-void CRSApplicationWidget::clear()
-{
-//  // Clear the data in the list editor widgets
-//  touch_point_editor_->clear();
-//  verification_point_editor_->clear();
-//  tool_path_editor_->clear();
-
-//  // Clear the text input data about the model
-//  ui_->line_edit_model_name->clear();
-//  ui_->plain_text_edit_model_description->clear();
-
-//  // Clear the text input data about the job
-//  ui_->line_edit_job_name->clear();
-//  ui_->plain_text_edit_job_description->clear();
-}
-
-bool CRSApplicationWidget::loadMesh()
-{
-//  // Attempt to load this file into a shape_msgs/Mesh type
-//  shape_msgs::Mesh mesh;
-//  if (!utils::getMeshMsgFromResource(mesh_resource_, mesh))
-//  {
-//    std::string message = "Failed to load mesh from resource: '" + mesh_resource_ + "'";
-//    QMessageBox::warning(this, "Input Error", message.c_str());
-//    return false;
-//  }
-
-//  // Clear the touch point and tool path editors' data before continuing
-//  clear();
-
-//  // Initialize the tool path editor with the mesh
-//  tool_path_editor_->init(mesh);
-
-//  // Enable the models tabs but not the jobs tabs
-//  setModelTabsEnabled(true);
-//  setJobTabsEnabled(false, false);
-
-//  // Publish the mesh marker
-//  visualization_msgs::Marker mesh_marker =
-//      utils::createMeshMarker(0, "mesh", Eigen::Isometry3d::Identity(), marker_frame_, mesh_resource_);
-
-//  pub_.publish(mesh_marker);
-
-//  return true;
-}
-
-void CRSApplicationWidget::setModelTabsEnabled(bool enabled)
-{
-//  for (int i = 1; i < ui_->tool_box_model_editor->count(); ++i)
-//  {
-//    ui_->tool_box_model_editor->setItemEnabled(i, enabled);
-//  }
-
-//  ui_->frame_define_touch_off_points->setEnabled(enabled);
-//  ui_->frame_define_verification_points->setEnabled(enabled);
-}
-
-void CRSApplicationWidget::setJobTabsEnabled(bool enabled, bool first_enabled)
-{
-//  for (int i = 1; i < ui_->tool_box_job_editor->count(); ++i)
-//  {
-//    ui_->tool_box_job_editor->setItemEnabled(i, enabled);
-//  }
-//  if (ui_->tool_box_job_editor->count() > 0)
-//  {
-//    ui_->tool_box_job_editor->setItemEnabled(0, first_enabled);
-//    ui_->push_button_new_job->setEnabled(first_enabled);
-//    ui_->push_button_load_jobs_from_database->setEnabled(first_enabled);
-//    ui_->push_button_load_selected_job->setEnabled(first_enabled);
-//  }
-//  ui_->frame_define_toolpaths->setEnabled(enabled);
-}
-
-}  // namespace opp_gui
+} // namespace rpgatta_gui
