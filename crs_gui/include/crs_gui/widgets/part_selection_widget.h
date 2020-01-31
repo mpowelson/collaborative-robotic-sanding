@@ -38,7 +38,11 @@ public:
                       std::string database_directory = std::string(std::getenv("HOME")) + "/.local/share/"
                                                                                           "offline_generated_paths");
 Q_SIGNALS:
+  /** @brief Signal emitted when Load Selected Part is clicked with name of the part selected*/
   void partSelected(std::string);
+  /** @brief Signal emmited when Load Selected Part is clickd. First arg is part selected. Second arg is path to
+   * toolpath yaml */
+  void partPathSelected(std::string, std::string);
 
 protected Q_SLOTS:
 

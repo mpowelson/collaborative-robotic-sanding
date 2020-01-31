@@ -27,7 +27,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QTextEdit" name="text_edit_part_description"/>
+      <widget class="QListWidget" name="list_widget_part_paths"/>
      </item>
     </layout>
    </item>

@@ -80,7 +80,29 @@ void PartSelectionWidget::onPartSelectionChanged(QListWidgetItem* current, QList
   // Change the description display based on which part is selected
   if (current != nullptr)
   {
-    ui_->text_edit_part_description->setText(current->data(Qt::ItemDataRole::UserRole).toString());
+    // Get selected part path
+    using namespace boost::filesystem;
+    path part(ui_->list_widget_parts->currentItem()->data(Qt::ItemDataRole::UserRole).toString().toUtf8());
+    path part_paths_dir(database_directory_);
+    part_paths_dir += "/" + part.string();
+
+    // Get all yaml files in that directory
+    std::vector<path> part_paths;
+    for (directory_iterator itr(part_paths_dir); itr != directory_iterator(); itr++)
+    {
+      if (itr->path().extension() == ".yaml")
+        part_paths.push_back(itr->path());
+    }
+
+    // Display all yaml files
+    ui_->list_widget_part_paths->clear();
+    for (auto& paths : part_paths)
+    {
+      // Gui display listing parts to user
+      QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(paths.stem().string()));
+      item->setData(Qt::ItemDataRole::UserRole, QVariant(QString::fromStdString(paths.stem().string())));
+      ui_->list_widget_part_paths->addItem(item);
+    }
   }
 }
 
@@ -88,7 +110,10 @@ void PartSelectionWidget::onPartSelected()
 {
   std::string current_part =
       ui_->list_widget_parts->currentItem()->data(Qt::ItemDataRole::UserRole).toString().toUtf8().constData();
+  std::string current_path =
+      ui_->list_widget_part_paths->currentItem()->data(Qt::ItemDataRole::UserRole).toString().toUtf8().constData();
   emit partSelected(current_part);
+  emit partPathSelected(current_part, current_path);
 }
 
 }  // namespace crs_gui
