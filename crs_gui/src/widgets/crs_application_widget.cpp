@@ -47,7 +47,6 @@ CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
                                            std::string database_directory)
   : QWidget(parent), ui_(new Ui::CRSApplication), node_(node), database_directory_(database_directory)
 {
-//  ui_ = new Ui::CrsApplication();
   ui_->setupUi(this);
 
 //  // Add the available tf frame
@@ -94,14 +93,14 @@ CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
 //  setModelTabsEnabled(false);
 //  setJobTabsEnabled(false, false);
 
-//  // Connect the signals and slots
-//  connect(ui_->push_button_find_model_file, &QPushButton::clicked, this, &ToolPathPlannerWidget::browseForMeshResource);
+  //  // Connect the signals and slots
+  //  connect(ui_->push_button_find_model_file, &QPushButton::clicked, this,
+  //  &ToolPathPlannerWidget::browseForMeshResource);
   connect(ui_->push_button_refresh_part_list, &QPushButton::clicked, this, &CRSApplicationWidget::refreshPartsList);
   refreshPartsList();
-  //  connect(
-  //      ui_->list_widget_parts, &QListWidget::currentItemChanged, this,
-  //      &ToolPathPlannerWidget::onModelSelectionChanged);
-  connect(ui_->push_button_load_selected_part, &QPushButton::clicked, this, &CRSApplicationWidget::loadSelectedModel);
+  connect(
+      ui_->list_widget_parts, &QListWidget::currentItemChanged, this, &CRSApplicationWidget::onModelSelectionChanged);
+  connect(ui_->push_button_load_selected_part, &QPushButton::clicked, this, &CRSApplicationWidget::loadSelectedPart);
   //  connect(ui_->push_button_save_entry, &QPushButton::clicked, this, &ToolPathPlannerWidget::saveModel);
 
   //  // Signals & slots for the buttons on job definition page
@@ -122,8 +121,9 @@ CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
   //  connect(ui_->push_button_refresh_parts, &QPushButton::clicked, this, &ToolPathPlannerWidget::refresh);
   //  connect(ui_->push_button_refresh_jobs, &QPushButton::clicked, this, &ToolPathPlannerWidget::refresh);
 
-  //  // Add a publisher for the mesh marker
-  //  pub_ = nh_.advertise<visualization_msgs::Marker>(MESH_MARKER_TOPIC, 1, true);
+    // Add a publisher for the mesh marker
+  marker_pub_.reset();
+  marker_pub_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(MESH_MARKER_TOPIC, 1);
 
   //  // Set up the Database views in the third page
   //  std::string query = "`suppressed`!=\"1\"";
@@ -243,14 +243,14 @@ void CRSApplicationWidget::refreshPartsList()
 
 void CRSApplicationWidget::onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem*)
 {
-//  // Change the description display
-//  if (current != nullptr)
-//  {
-//    ui_->text_edit_part_description->setText(current->data(Qt::ItemDataRole::UserRole).toString());
-//  }
+  // Change the description display based on which part is selected
+  if (current != nullptr)
+  {
+    ui_->text_edit_part_description->setText(current->data(Qt::ItemDataRole::UserRole).toString());
+  }
 }
 
-void CRSApplicationWidget::loadSelectedModel()
+void CRSApplicationWidget::loadSelectedPart()
 {
 //  int row = ui_->list_widget_parts->currentRow();
 //  if (row >= 0 && row < static_cast<int>(existing_parts_.size()))

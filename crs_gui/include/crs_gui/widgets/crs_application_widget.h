@@ -21,6 +21,7 @@
 #include <QWidget>
 
 #include <rclcpp/rclcpp.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 #include <string>
 //#include <ros/node_handle.h>
 //#include <ros/publisher.h>
@@ -57,7 +58,7 @@ protected Q_SLOTS:
 
   void refreshPartsList();
   void onModelSelectionChanged(QListWidgetItem* current, QListWidgetItem* previous);
-  void loadSelectedModel();
+  void loadSelectedPart();
   void saveModel();
 
   // Jobs Page
@@ -90,6 +91,7 @@ private:
 
   rclcpp::Node::SharedPtr node_;
 //  ros::Publisher pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
 //  ros::ServiceClient save_model_client_;
 //  ros::ServiceClient save_job_client_;
 //  ros::ServiceClient get_all_models_client_;
