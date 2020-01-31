@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Southwest Research Institute
+ * Copyright 2020 Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef RPGATTA_GUI_WIDGETS_APPLICATION_WIDGET_BASE_H
-#define RPGATTA_GUI_WIDGETS_APPLICATION_WIDGET_BASE_H
+#ifndef CRS_GUI_WIDGETS_CRS_APPLICATION_WIDGET_H
+#define CRS_GUI_WIDGETS_CRS_APPLICATION_WIDGET_H
 
 #include <QWidget>
 
@@ -27,10 +27,11 @@
 //#include <ros/node_handle.h>
 //#include <ros/service_client.h>
 
-//#include <rpgatta_msgs/AllowUserControlAction.h>
+//#include <crs_msgs/AllowUserControlAction.h>
 //#include <actionlib/server/simple_action_server.h>
 
-//#include <rpgatta_gui/widgets/manual_manipulation_widget.h>
+//#include <crs_gui/widgets/manual_manipulation_widget.h>
+
 
 class QPushButton;
 class QStateMachine;
@@ -50,7 +51,7 @@ class CRSApplication;
 
 namespace crs_gui
 {
-//class PartSelectorWidget;
+class PartSelectionWidget;
 //class JobSelectorWidget;
 //class TrajectoryApprovalWidget;
 //class DatabaseLogWidget;
@@ -110,6 +111,8 @@ public Q_SLOTS:
 
 protected Q_SLOTS:
 
+  void onPartSelected(const std::string);
+
   void onPartSelectionStatusChanged(const bool status);
 
   virtual void onPartRemoved(const bool success);
@@ -154,7 +157,7 @@ protected:
    */
   void createStateMachine();
 
-//  void userControlCallback(const rpgatta_msgs::AllowUserControlGoalConstPtr& goal);
+//  void userControlCallback(const crs_msgs::AllowUserControlGoalConstPtr& goal);
 
   /* Notification callbacks
    *
@@ -185,17 +188,17 @@ protected:
 
   rclcpp::Node::SharedPtr node_;
 
-//  actionlib::SimpleActionServer<rpgatta_msgs::AllowUserControlAction> user_control_action_server_;
+//  actionlib::SimpleActionServer<crs_msgs::AllowUserControlAction> user_control_action_server_;
 
-//  rpgatta_application::ApplicationContextBasePtr app_;
+//  crs_application::ApplicationContextBasePtr app_;
 
-//  PartSelectorWidget* part_selector_widget_;
+  PartSelectionWidget* part_selector_widget_;
 //  JobSelectorWidget* job_selector_widget_;
 //  TrajectoryApprovalWidget* trajectory_approval_widget_;
 //  ManualManipulationWidget* manual_manipulation_widget_;
 //  DatabaseLogWidget* database_log_widget_;
 };
 
-} // namespace rpgatta_gui
+} // namespace crs_gui
 
-#endif // RPGATTA_GUI_WIDGETS_APPLICATION_WIDGET_BASE_H
+#endif // crs_GUI_WIDGETS_APPLICATION_WIDGET_BASE_H

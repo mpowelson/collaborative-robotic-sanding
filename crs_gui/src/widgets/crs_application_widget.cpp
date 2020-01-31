@@ -24,15 +24,16 @@
 
 #include <crs_gui/widgets/crs_application_widget.h>
 
+#include <crs_gui/widgets/part_selection_widget.h>
 //#include "application_state_properties_impl.h"
-//#include <rpgatta_application/application/application_context_base.h>
-//#include <rpgatta_gui/application_state_machine.h>
-//#include <rpgatta_gui/widgets/application_widget_base.h>
-//#include <rpgatta_gui/widgets/database_selection_widget.h>
-//#include <rpgatta_gui/widgets/trajectory_approval_widget.h>
-//#include <rpgatta_gui/widgets/manual_manipulation_widget.h>
-//#include <rpgatta_gui/widgets/database_log_widget.h>
-//#include <rpgatta_msgs/LetUserJogRobot.h>
+//#include <crs_application/application/application_context_base.h>
+//#include <crs_gui/application_state_machine.h>
+//#include <crs_gui/widgets/application_widget_base.h>
+//#include <crs_gui/widgets/database_selection_widget.h>
+//#include <crs_gui/widgets/trajectory_approval_widget.h>
+//#include <crs_gui/widgets/manual_manipulation_widget.h>
+//#include <crs_gui/widgets/database_log_widget.h>
+//#include <crs_msgs/LetUserJogRobot.h>
 
 const static std::string TRAJECTORY_PREVIEW_TOPIC = "trajectory_preview";
 const static std::string STATE_PREVIEW_TOPIC = "state_preview";
@@ -46,7 +47,7 @@ namespace crs_gui
 CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
                                        QWidget* parent,
                                        std::string database_directory)
-  : QWidget(parent), ui_(new Ui::CRSApplication)
+  : QWidget(parent), ui_(new Ui::CRSApplication), part_selector_widget_(new PartSelectionWidget())
 //  , user_control_action_server_(ALLOW_OPERATOR_CONTROL_SERVICE, boost::bind(&CRSApplicationWidget::userControlCallback, this, _1), false)
 //  , app_(app)
 {
@@ -72,7 +73,7 @@ CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
 //  progress_bar_->setValue(0);
 
 //  // Add the widgets to the UI
-//  ui_->vertical_layout_part_selector->addWidget(part_selector_widget_);
+  ui_->vertical_layout_part_selector->addWidget(part_selector_widget_);
 //  ui_->vertical_layout_job_selector->addWidget(job_selector_widget_);
 //  ui_->vertical_layout_preview_approval->addWidget(trajectory_approval_widget_);
 //  ui_->vertical_layout_localize->addWidget(progress_bar_);
@@ -100,6 +101,7 @@ CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
 //  connect(manual_manipulation_widget_, &ManualManipulationWidget::manipulatorChanged, this, &CRSApplicationWidget::manipulatorChangedManipulationWidget);
 //  connect(manual_manipulation_widget_, &ManualManipulationWidget::tcpLinkChanged, this, &CRSApplicationWidget::tcpLinkChangedManipulationWidget);
 
+  connect(part_selector_widget_, &PartSelectionWidget::partSelected, this, &CRSApplicationWidget::onPartSelected);
 //  connect(part_selector_widget_, &PartSelectorWidget::okToProceed, this, &CRSApplicationWidget::onPartSelectionStatusChanged);
 //  connect(job_selector_widget_, &JobSelectorWidget::okToProceed, this, &CRSApplicationWidget::onJobSelectionStatusChanged);
 
@@ -188,11 +190,11 @@ void CRSApplicationWidget::createStateMachine()
 //                                  execution_started.meta_state,
 //                                  this, SIGNAL(executionComplete()));
 
-//  // Since rpgatta_4702 does not currently have detailed scan capability,
+//  // Since crs_4702 does not currently have detailed scan capability,
 //  // check whether we are on that robot.  This result will be used to
 //  // enable or disable the detailed scan button.
 //  ROS_ERROR_STREAM(app_->getRobotId().c_str());
-//  bool use_detailed_scan = (app_->getRobotId() != std::string("rpgatta_4702"));
+//  bool use_detailed_scan = (app_->getRobotId() != std::string("crs_4702"));
 //  ROS_ERROR_STREAM(use_detailed_scan);
 
 //  // Assign properties to the UI for each state (i.e. buttons/tabs enabled, colors, etc.)
@@ -232,7 +234,7 @@ void CRSApplicationWidget::createStateMachine()
 //  sm_->start();
 }
 
-//void CRSApplicationWidget::userControlCallback(const rpgatta_msgs::AllowUserControlGoalConstPtr& goal)
+//void CRSApplicationWidget::userControlCallback(const crs_msgs::AllowUserControlGoalConstPtr& goal)
 //{
   // Create a thread-safe variable to keep track of the state of the window
 //  std::atomic<bool> done (false);
@@ -253,12 +255,18 @@ void CRSApplicationWidget::createStateMachine()
 //    ROS_DEBUG_STREAM_THROTTLE(2.0, "Waiting for user to relinquish control of the robot...");
 //  }
 
-//  rpgatta_msgs::AllowUserControlResult result;
+//  crs_msgs::AllowUserControlResult result;
 //  result.success = true;
 //  result.message = "Done";
 
 //  user_control_action_server_.setSucceeded(result);
 //}
+
+
+void CRSApplicationWidget::onPartSelected(const std::string selected_part)
+{
+  std::cout << selected_part << std::endl;
+}
 
 
 void CRSApplicationWidget::onPartSelectionStatusChanged(const bool status)
@@ -286,10 +294,10 @@ void CRSApplicationWidget::onPartRemoved(const bool success)
 
 void CRSApplicationWidget::onSafelyGoHome()
 {
-//  rpgatta_application::NotifyCBType notify_cb =
+//  crs_application::NotifyCBType notify_cb =
 //      boost::bind(&CRSApplicationWidget::onSafelyWentHome, this, _1);
 
-//  rpgatta_application::TaskResponse res = app_->safelyGoHome(notify_cb);
+//  crs_application::TaskResponse res = app_->safelyGoHome(notify_cb);
 //  if (!res.success)
 //  {
 //    QMessageBox::warning(this, "Retreat to Home Error", QString::fromStdString(res.message));
@@ -314,10 +322,10 @@ void CRSApplicationWidget::onSafelyWentHome(const bool success)
 
 void CRSApplicationWidget::onScanBooth()
 {
-//  rpgatta_application::NotifyCBType notify_cb =
+//  crs_application::NotifyCBType notify_cb =
 //      boost::bind(&CRSApplicationWidget::onScanBoothComplete, this, _1);
 
-//  rpgatta_application::TaskResponse res = app_->scanBooth(notify_cb);
+//  crs_application::TaskResponse res = app_->scanBooth(notify_cb);
 //  if (!res.success)
 //  {
 //    QMessageBox::warning(this, "Booth Scan Error", QString::fromStdString(res.message));
@@ -340,10 +348,10 @@ void CRSApplicationWidget::onScanBoothComplete(const bool success)
 
 void CRSApplicationWidget::onAlignToScan()
 {
-//  rpgatta_application::NotifyCBType notify_cb =
+//  crs_application::NotifyCBType notify_cb =
 //      boost::bind(&CRSApplicationWidget::onLocalizationComplete, this, _1);
 
-//  rpgatta_application::TaskResponse res = app_->alignToScan(notify_cb);
+//  crs_application::TaskResponse res = app_->alignToScan(notify_cb);
 //  if (!res.success)
 //  {
 //    QMessageBox::warning(this, "Alignment to Scan Error", QString::fromStdString(res.message));
@@ -364,13 +372,13 @@ void CRSApplicationWidget::onStartLocalization()
 //    emit partSelected();
 //    return;
 //  }
-//  rpgatta_application::NotifyCBType notify_cb =
+//  crs_application::NotifyCBType notify_cb =
 //      boost::bind(&CRSApplicationWidget::onLocalizationComplete, this, _1);
 
-//  rpgatta_application::PercentageFeedbackCBType feedback_cb =
+//  crs_application::PercentageFeedbackCBType feedback_cb =
 //      boost::bind(&CRSApplicationWidget::onLocalizationFeedback, this, _1);
 
-//  rpgatta_application::TaskResponse res = app_->localizePart(notify_cb, feedback_cb);
+//  crs_application::TaskResponse res = app_->localizePart(notify_cb, feedback_cb);
 //  if(!res.success)
 //  {
 //    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
@@ -380,10 +388,10 @@ void CRSApplicationWidget::onStartLocalization()
 
 void CRSApplicationWidget::onLoadLocLog()
 {
-//  rpgatta_application::NotifyCBType notify_cb =
+//  crs_application::NotifyCBType notify_cb =
 //      boost::bind(&CRSApplicationWidget::onLocalizationComplete, this, _1);
 
-//  rpgatta_application::TaskResponse res = app_->getLocLog(notify_cb);
+//  crs_application::TaskResponse res = app_->getLocLog(notify_cb);
 //  if(!res.success)
 //  {
 //    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
@@ -393,10 +401,10 @@ void CRSApplicationWidget::onLoadLocLog()
 
 void CRSApplicationWidget::onDetailedScanLoc()
 {
-//  rpgatta_application::NotifyCBType notify_cb =
+//  crs_application::NotifyCBType notify_cb =
 //      boost::bind(&CRSApplicationWidget::onLocalizationComplete, this, _1);
 
-//  rpgatta_application::TaskResponse res = app_->detailedScanLoc(notify_cb);
+//  crs_application::TaskResponse res = app_->detailedScanLoc(notify_cb);
 //  if(!res.success)
 //  {
 //    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
@@ -428,13 +436,13 @@ void CRSApplicationWidget::onLocalizationComplete(const bool success)
 
 void CRSApplicationWidget::onStartLocalizationVerification()
 {
-//  rpgatta_application::NotifyCBType notify_cb =
+//  crs_application::NotifyCBType notify_cb =
 //      boost::bind(&CRSApplicationWidget::onLocalizationVerificationComplete, this, _1);
 
-//  rpgatta_application::PercentageFeedbackCBType feedback_cb =
+//  crs_application::PercentageFeedbackCBType feedback_cb =
 //      boost::bind(&CRSApplicationWidget::onLocalizationVerificationFeedback, this, _1);
 
-//  rpgatta_application::TaskResponse res = app_->verifyPartLocalization(notify_cb, feedback_cb);
+//  crs_application::TaskResponse res = app_->verifyPartLocalization(notify_cb, feedback_cb);
 //  if(!res.success)
 //  {
 //    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
@@ -484,7 +492,7 @@ void CRSApplicationWidget::onPlanJob()
   progress_dialog_->setCancelButton(nullptr);   // TODO: Connect to cancel action
   progress_dialog_->hide();
 
-//  rpgatta_application::TaskResponse res = app_->planJob(boost::bind(&CRSApplicationWidget::onPlanJobComplete, this, _1));
+//  crs_application::TaskResponse res = app_->planJob(boost::bind(&CRSApplicationWidget::onPlanJobComplete, this, _1));
 //  if(!res.success)
 //  {
 //    emit jobSelected();
@@ -527,7 +535,7 @@ void CRSApplicationWidget::onPlanJobComplete(const bool success)
 
 void CRSApplicationWidget::onApproveJob()
 {
-//  rpgatta_application::TaskResponse res = app_->approveJob(boost::bind(&CRSApplicationWidget::onApproveJobComplete, this, _1));
+//  crs_application::TaskResponse res = app_->approveJob(boost::bind(&CRSApplicationWidget::onApproveJobComplete, this, _1));
 //  if(!res.success)
 //  {
 //    // TODO: need to emit a signal here to go into a different state?
@@ -555,7 +563,7 @@ void CRSApplicationWidget::onApproveJobComplete(const bool approved)
 
 void CRSApplicationWidget::onExecuteJob()
 {
-//  rpgatta_application::TaskResponse job_log_res = app_->addJobLog();
+//  crs_application::TaskResponse job_log_res = app_->addJobLog();
 //  if (job_log_res.success)
 //  {
 //    ROS_INFO_STREAM(job_log_res.message);
@@ -565,7 +573,7 @@ void CRSApplicationWidget::onExecuteJob()
 //    ROS_ERROR_STREAM(job_log_res.message);
 //  }
 
-//  rpgatta_application::TaskResponse res = app_->executeJob(boost::bind(&CRSApplicationWidget::onExecuteJobComplete, this, _1));
+//  crs_application::TaskResponse res = app_->executeJob(boost::bind(&CRSApplicationWidget::onExecuteJobComplete, this, _1));
 //  if(!res.success)
 //  {
 //    QMessageBox::warning(this, "Application Error", QString::fromStdString(res.message));
@@ -649,4 +657,4 @@ void CRSApplicationWidget::availableTCPLinksChangedManipulationWidget(QStringLis
 //  manual_manipulation_widget_->setAvailableTCPLinks(tcp_links);
 }
 
-} // namespace rpgatta_gui
+} // namespace crs_gui
