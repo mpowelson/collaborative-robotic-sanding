@@ -88,41 +88,41 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QComboBox" name="comboBox"/>
+          <widget class="QComboBox" name="combo_box_sm_available_actions"/>
          </item>
          <item row="2" column="2">
-          <widget class="QPushButton" name="push_button_sm_query_2">
+          <widget class="QPushButton" name="push_button_sm_query">
            <property name="text">
             <string>Query</string>
            </property>
           </widget>
          </item>
          <item row="2" column="0">
-          <widget class="QLabel" name="label_state_machine_actions_2">
+          <widget class="QLabel" name="label_sm_actions">
            <property name="text">
             <string>State Machine Actions</string>
            </property>
           </widget>
          </item>
          <item row="4" column="2">
-          <widget class="QPushButton" name="push_button_sm_apply_2">
+          <widget class="QPushButton" name="push_button_sm_approve">
            <property name="text">
-            <string>Apply</string>
+            <string>Approve</string>
            </property>
           </widget>
          </item>
          <item row="4" column="0">
-          <widget class="QLabel" name="label_state_machine_actions">
+          <widget class="QLabel" name="label_sm_current_state">
            <property name="text">
             <string>Current State</string>
            </property>
           </widget>
          </item>
          <item row="4" column="1">
-          <widget class="QComboBox" name="combo_box_sm_actions_2"/>
+          <widget class="QComboBox" name="combo_box_sm_current_state"/>
          </item>
          <item row="4" column="3">
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="push_button_sm_cancel">
            <property name="text">
             <string>Cancel</string>
            </property>

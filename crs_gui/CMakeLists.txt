@@ -8,6 +8,7 @@ find_package(shape_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 
 find_package(crs_area_selection REQUIRED path)
+find_package(crs_msgs REQUIRED)
 
 find_package(Qt5 REQUIRED COMPONENTS
   Core

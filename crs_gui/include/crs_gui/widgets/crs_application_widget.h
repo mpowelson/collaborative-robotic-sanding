@@ -22,12 +22,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <std_msgs/msg/string.hpp>
+#include <crs_msgs/srv/get_available_actions.hpp>
+#include <crs_msgs/srv/execute_action.hpp>
 #include <string>
-
-class QPushButton;
-class QStateMachine;
-class QProgressBar;
-class QProgressDialog;
 
 namespace Ui
 {
@@ -52,12 +49,21 @@ protected Q_SLOTS:
 
   void onPartSelected(const std::string);
 
+  void onSMQuery();
+  void onSMApply();
+  void onSMApprove();
+  void onSMCancel();
+
 protected:
   Ui::CRSApplication* ui_;
 
   rclcpp::Node::SharedPtr node_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr current_state_sub_;
   void currentStateCB(const std_msgs::msg::String::ConstSharedPtr current_state);
+
+  rclcpp::Client<crs_msgs::srv::GetAvailableActions>::SharedPtr get_available_actions_client_;
+  rclcpp::Client<crs_msgs::srv::ExecuteAction>::SharedPtr execute_action_client_;
+
 
   PartSelectionWidget* part_selector_widget_;
   PolygonAreaSelectionWidget* area_selection_widget_;
