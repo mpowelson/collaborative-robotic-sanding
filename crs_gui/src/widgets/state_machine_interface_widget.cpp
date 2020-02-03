@@ -14,69 +14,53 @@
  * limitations under the License.
  */
 
-#include "ui_crs_application.h"
+#include "ui_state_machine_interface.h"
 
 #include <atomic>
 #include <QMessageBox>
 #include <QStateMachine>
-#include <QProgressBar>
-#include <QProgressDialog>
 
 #include <chrono>
 
-#include <crs_gui/widgets/crs_application_widget.h>
+#include <crs_gui/widgets/state_machine_interface_widget.h>
 
-#include <crs_gui/widgets/part_selection_widget.h>
-#include <crs_gui/widgets/polygon_area_selection_widget.h>
 
 const static std::string CURRENT_STATE_TOPIC = "current_state";
 const static std::string GET_AVAILABLE_ACTIONS = "get_available_actions";
 const static std::string EXECUTE_ACTION = "execute_action";
-const static double WAIT_FOR_SERVICE_PERIOD = 1.0;
+const static double WAIT_FOR_SERVICE_PERIOD = 0.1;
 
 namespace crs_gui
 {
-CRSApplicationWidget::CRSApplicationWidget(rclcpp::Node::SharedPtr node,
-                                           QWidget* parent,
-                                           std::string database_directory)
+StateMachineInterfaceWidget::StateMachineInterfaceWidget(rclcpp::Node::SharedPtr node,
+                                           QWidget* parent)
   : QWidget(parent)
-  , ui_(new Ui::CRSApplication)
-  , part_selector_widget_(new PartSelectionWidget())
-  , area_selection_widget_(new PolygonAreaSelectionWidget(node, "", ""))
+  , ui_(new Ui::StateMachineInterface)
   , node_(node)
 
 {
   ui_->setupUi(this);
 
   // Initialize state machine interfaces
-  auto current_state_cb = std::bind(&CRSApplicationWidget::currentStateCB, this, std::placeholders::_1);
+  auto current_state_cb = std::bind(&StateMachineInterfaceWidget::currentStateCB, this, std::placeholders::_1);
   current_state_sub_ = node_->create_subscription<std_msgs::msg::String>(CURRENT_STATE_TOPIC, 1, current_state_cb);
   get_available_actions_client_ = node_->create_client<crs_msgs::srv::GetAvailableActions>(GET_AVAILABLE_ACTIONS);
   execute_action_client_ = node_->create_client<crs_msgs::srv::ExecuteAction>(EXECUTE_ACTION);
 
-
-  //  // Add the widgets to the UI
-  ui_->vertical_layout_part_selector->addWidget(part_selector_widget_);
-  ui_->vertical_layout_area_selection->addWidget(area_selection_widget_);
-
-  connect(part_selector_widget_, &PartSelectionWidget::partSelected, this, &CRSApplicationWidget::onPartSelected);
-
   // TODO: Make state machine interaction a standalone widget
-  connect(ui_->push_button_sm_apply, &QPushButton::clicked, this, &CRSApplicationWidget::onSMApply);
-  connect(ui_->push_button_sm_query, &QPushButton::clicked, this, &CRSApplicationWidget::onSMQuery);
-  connect(ui_->push_button_sm_cancel, &QPushButton::clicked, this, &CRSApplicationWidget::onSMCancel);
-  connect(ui_->push_button_sm_approve, &QPushButton::clicked, this, &CRSApplicationWidget::onSMApprove);
+  connect(ui_->push_button_sm_apply, &QPushButton::clicked, this, &StateMachineInterfaceWidget::onSMApply);
+  connect(ui_->push_button_sm_query, &QPushButton::clicked, this, &StateMachineInterfaceWidget::onSMQuery);
+  connect(ui_->push_button_sm_cancel, &QPushButton::clicked, this, &StateMachineInterfaceWidget::onSMCancel);
+  connect(ui_->push_button_sm_approve, &QPushButton::clicked, this, &StateMachineInterfaceWidget::onSMApprove);
 }
 
-void CRSApplicationWidget::currentStateCB(const std_msgs::msg::String::ConstSharedPtr current_state)
+void StateMachineInterfaceWidget::currentStateCB(const std_msgs::msg::String::ConstSharedPtr current_state)
 {
   std::cout << current_state << std::endl;
 }
 
-void CRSApplicationWidget::onPartSelected(const std::string selected_part) { std::cout << selected_part << std::endl; }
-
 // State machine button callbacks
-void CRSApplicationWidget::onSMApply()
+void StateMachineInterfaceWidget::onSMApply()
 {
   // Specify service request to get all user actions in current state
   auto request = std::make_shared<crs_msgs::srv::ExecuteAction::Request>();
@@ -97,7 +81,7 @@ void CRSApplicationWidget::onSMApply()
 }
 
 // TODO: This state machine interface would be better suited as its own widget
-void CRSApplicationWidget::onSMQuery()
+void StateMachineInterfaceWidget::onSMQuery()
 {
   // Specify service request to get all user actions in current state
   auto request = std::make_shared<crs_msgs::srv::GetAvailableActions::Request>();
@@ -125,7 +109,7 @@ void CRSApplicationWidget::onSMQuery()
   }
 }
 
-void CRSApplicationWidget::onSMCancel()
+void StateMachineInterfaceWidget::onSMCancel()
 {
   // Specify service request to get all user actions in current state
   auto request = std::make_shared<crs_msgs::srv::ExecuteAction::Request>();
@@ -145,7 +129,7 @@ void CRSApplicationWidget::onSMCancel()
   }
 }
 
-void CRSApplicationWidget:: onSMApprove()
+void StateMachineInterfaceWidget:: onSMApprove()
 {
   // Specify service request to get all user actions in current state
   auto request = std::make_shared<crs_msgs::srv::ExecuteAction::Request>();
