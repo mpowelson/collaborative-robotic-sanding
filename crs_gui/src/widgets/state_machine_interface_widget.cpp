@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Southwest Research Institute
+ * Copyright 2020 Southwest Research Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,19 +24,17 @@
 
 #include <crs_gui/widgets/state_machine_interface_widget.h>
 
-
 const static std::string CURRENT_STATE_TOPIC = "current_state";
-const static std::string GET_AVAILABLE_ACTIONS = "get_available_actions";
 const static std::string EXECUTE_ACTION = "execute_action";
+const static std::string GET_AVAILABLE_ACTIONS = "get_available_actions";
+const static std::string USER_APPROVES_ACTION_ID = "user_approves";
+const static std::string USER_CANCELS_ACTION_ID = "user_cancels";
 const static double WAIT_FOR_SERVICE_PERIOD = 0.1;
 
 namespace crs_gui
 {
-StateMachineInterfaceWidget::StateMachineInterfaceWidget(rclcpp::Node::SharedPtr node,
-                                           QWidget* parent)
-  : QWidget(parent)
-  , ui_(new Ui::StateMachineInterface)
-  , node_(node)
+StateMachineInterfaceWidget::StateMachineInterfaceWidget(rclcpp::Node::SharedPtr node, QWidget* parent)
+  : QWidget(parent), ui_(new Ui::StateMachineInterface), node_(node)
 
 {
   ui_->setupUi(this);
@@ -56,7 +54,7 @@ StateMachineInterfaceWidget::StateMachineInterfaceWidget(rclcpp::Node::SharedPtr
 
 void StateMachineInterfaceWidget::currentStateCB(const std_msgs::msg::String::ConstSharedPtr current_state)
 {
-  std::cout << current_state << std::endl;
+  ui_->line_edit_sm_current_state->setText(QString::fromUtf8(current_state.get()->data.c_str()));
 }
 
 // State machine button callbacks
@@ -80,7 +78,6 @@ void StateMachineInterfaceWidget::onSMApply()
   }
 }
 
-// TODO: This state machine interface would be better suited as its own widget
 void StateMachineInterfaceWidget::onSMQuery()
 {
   // Specify service request to get all user actions in current state
@@ -101,6 +98,7 @@ void StateMachineInterfaceWidget::onSMQuery()
     QStringList available_actions;
     for (std::string action : result.get()->action_ids)
       available_actions.push_back(QString::fromUtf8(action.c_str()));
+    ui_->combo_box_sm_available_actions->clear();
     ui_->combo_box_sm_available_actions->addItems(available_actions);
   }
   else
@@ -113,7 +111,7 @@ void StateMachineInterfaceWidget::onSMCancel()
 {
   // Specify service request to get all user actions in current state
   auto request = std::make_shared<crs_msgs::srv::ExecuteAction::Request>();
-  request->action_id = "user_rejects";
+  request->action_id = USER_CANCELS_ACTION_ID;
 
   // Wait if service is not available
   if (!execute_action_client_->wait_for_service(std::chrono::duration<double>(WAIT_FOR_SERVICE_PERIOD)))
@@ -129,11 +127,11 @@ void StateMachineInterfaceWidget::onSMCancel()
   }
 }
 
-void StateMachineInterfaceWidget:: onSMApprove()
+void StateMachineInterfaceWidget::onSMApprove()
 {
   // Specify service request to get all user actions in current state
   auto request = std::make_shared<crs_msgs::srv::ExecuteAction::Request>();
-  request->action_id = "user_approves";
+  request->action_id = USER_APPROVES_ACTION_ID;
 
   // Wait if service is not available
   if (!execute_action_client_->wait_for_service(std::chrono::duration<double>(WAIT_FOR_SERVICE_PERIOD)))

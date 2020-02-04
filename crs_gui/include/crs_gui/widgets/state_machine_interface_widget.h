@@ -32,30 +32,35 @@ class StateMachineInterface;
 
 namespace crs_gui
 {
-
-
 class StateMachineInterfaceWidget : public QWidget
 {
   Q_OBJECT
 public:
-  StateMachineInterfaceWidget(rclcpp::Node::SharedPtr node,
-                       QWidget* parent = nullptr);
+  StateMachineInterfaceWidget(rclcpp::Node::SharedPtr node, QWidget* parent = nullptr);
 
 protected Q_SLOTS:
 
+  /** @brief Calls ROS service to check available sm actions*/
   void onSMQuery();
+  /** @brief Applies selected sm action via ROS service*/
   void onSMApply();
+  /** @brief Applies user_approves action via ROS service*/
   void onSMApprove();
+  /** @brief Applies user_cancels action via ROS service*/
   void onSMCancel();
 
 protected:
   Ui::StateMachineInterface* ui_;
 
+  /** @brief Node that is used for service calls and subscriber*/
   rclcpp::Node::SharedPtr node_;
+  /** @brief Subscriber to topic publishing the current sm state*/
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr current_state_sub_;
+  /** @brief Current state subscriber callback*/
   void currentStateCB(const std_msgs::msg::String::ConstSharedPtr current_state);
-
+  /** @brief ROS client to get available sm actions*/
   rclcpp::Client<crs_msgs::srv::GetAvailableActions>::SharedPtr get_available_actions_client_;
+  /** @brief ROS client to execute sm action*/
   rclcpp::Client<crs_msgs::srv::ExecuteAction>::SharedPtr execute_action_client_;
 };
 

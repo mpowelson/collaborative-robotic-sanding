@@ -35,6 +35,7 @@ namespace crs_gui
 {
 class PartSelectionWidget;
 class PolygonAreaSelectionWidget;
+class StateMachineInterfaceWidget;
 
 class CRSApplicationWidget : public QWidget
 {
@@ -49,24 +50,15 @@ protected Q_SLOTS:
 
   void onPartSelected(const std::string);
 
-  void onSMQuery();
-  void onSMApply();
-  void onSMApprove();
-  void onSMCancel();
-
 protected:
   Ui::CRSApplication* ui_;
 
   rclcpp::Node::SharedPtr node_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr current_state_sub_;
-  void currentStateCB(const std_msgs::msg::String::ConstSharedPtr current_state);
-
-  rclcpp::Client<crs_msgs::srv::GetAvailableActions>::SharedPtr get_available_actions_client_;
-  rclcpp::Client<crs_msgs::srv::ExecuteAction>::SharedPtr execute_action_client_;
 
 
   PartSelectionWidget* part_selector_widget_;
   PolygonAreaSelectionWidget* area_selection_widget_;
+  StateMachineInterfaceWidget* state_machine_interface_widget_;
 };
 
 }  // namespace crs_gui
