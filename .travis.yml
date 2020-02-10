@@ -8,7 +8,7 @@ services:
 
 git:
   quiet: true
-  submodules: true
+  submodules: false
 
 notifications:
   email:
@@ -44,7 +44,7 @@ jobs:
       dist: bionic
       language: cpp
       env:
-      - DOCKER_IMAGE=mpowelson/bionic-qt-ros:eloquent
+      - DOCKER_IMAGE=mpowelson/bionic-qt-ros:eloquent_tesseract
       - ROS_DISTRO="eloquent"
       - NOT_TEST_BUILD=true
       - ADDITIONAL_DEBS="libompl-dev"
