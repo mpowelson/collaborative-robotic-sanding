@@ -38,22 +38,17 @@
 
 #include <atomic>
 #include <memory>
+#include <control_msgs/action/follow_joint_trajectory.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include "crs_application/common/common.h"
 #include "crs_application/common/datatypes.h"
+#include "crs_application/common/config.h"
 
 namespace crs_application
 {
 namespace task_managers
 {
-struct ProcessExecutionConfig
-{
-  double traj_time_tolerance = 5.0; /** @brief time tolerance on trajectory duration */
-  double wait_state_timeout = 1.0;  /** @brief seconds to wait for the current joint state*/
-  double joint_tolerance =
-      (3.1416 / 180.0) * 2.0; /** @brief how close the robot needs to be to the last position in radians */
-};
-
 class ProcessExecutionManager
 {
 public:
@@ -62,7 +57,7 @@ public:
 
   // initialization and configuration
   common::ActionResult init();
-  common::ActionResult configure(const ProcessExecutionConfig& config);
+  common::ActionResult configure(const config::ProcessExecutionConfig& config);
   common::ActionResult setInput(const datatypes::ProcessExecutionData& input);
 
   // Process Actions
@@ -97,18 +92,19 @@ protected:
   common::ActionResult checkPreReq();
 
   // roscpp
+  using GoalHandleT = rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::GoalHandle;
   std::shared_ptr<rclcpp::Node> node_;
-  rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr traj_exec_pub_;
+  rclcpp_action::Client<control_msgs::action::FollowJointTrajectory>::SharedPtr trajectory_exec_client_;
+  rclcpp::callback_group::CallbackGroup::SharedPtr trajectory_exec_client_cbgroup_;
+  std::shared_future<GoalHandleT::SharedPtr> trajectory_exec_fut_;
 
   // process data
-  std::shared_ptr<ProcessExecutionConfig> config_ = nullptr;
+  std::shared_ptr<config::ProcessExecutionConfig> config_ = nullptr;
   std::shared_ptr<datatypes::ProcessExecutionData> input_ = nullptr;
 
   // other
   int current_process_idx_ = 0;
   int current_media_change_idx_ = 0;
-
-  std::atomic<bool> executing_motion_;
 };
 
 } /* namespace task_managers */

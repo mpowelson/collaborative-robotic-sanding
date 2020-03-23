@@ -1,7 +1,7 @@
 /*
- * @author ros-industrial
- * @file part_rework_manager.cpp
- * @date Jan 16, 2020
+ * @author Jorge Nicho
+ * @file joint_pose_trajectory.hpp
+ * @date Feb 19, 2020
  * @copyright Copyright (c) 2020, Southwest Research Institute
  * Software License Agreement (BSD License)
  *
@@ -33,45 +33,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "crs_application/task_managers/part_rework_manager.h"
+#ifndef INCLUDE_CRS_GAZEBO_PLUGINS_JOINT_POSE_TRAJECTORY_HPP_
+#define INCLUDE_CRS_GAZEBO_PLUGINS_JOINT_POSE_TRAJECTORY_HPP_
 
-namespace crs_application
+#include <gazebo/common/Plugin.hh>
+#include <memory>
+
+namespace crs_gazebo_plugins
 {
-namespace task_managers
+class JointPoseTrajectoryPrivate;
+
+/// Set the trajectory of points to be followed by joints in simulation.
+/// Currently only positions specified in the trajectory_msgs are handled.
+/**
+  Example Usage:
+  \code{.xml}
+    <plugin name="gazebo_ros_joint_pose_trajectory"
+        filename="libgazebo_ros_joint_pose_trajectory.so">
+
+      <ros>
+
+        <!-- Add a namespace -->
+        <namespace>/my_namespace</namespace>
+
+        <!-- Remap the default topic -->
+        <remapping>set_joint_trajectory:=my_trajectory</remapping>
+
+      </ros>
+
+      <!-- Update rate in Hz -->
+      <update_rate>2</update_rate>
+
+    </plugin>
+  \endcode
+*/
+class JointPoseTrajectory : public gazebo::ModelPlugin
 {
-PartReworkManager::PartReworkManager(std::shared_ptr<rclcpp::Node> node) : node_(node) {}
+public:
+  /// Constructor
+  JointPoseTrajectory();
 
-PartReworkManager::~PartReworkManager() {}
+  /// Destructor
+  ~JointPoseTrajectory();
 
-common::ActionResult PartReworkManager::init()
-{
-  RCLCPP_WARN(node_->get_logger(), "%s not implemented yet", __PRETTY_FUNCTION__);
-  return true;
-}
+protected:
+  // Documentation inherited
+  void Load(gazebo::physics::ModelPtr model, sdf::ElementPtr sdf) override;
 
-common::ActionResult PartReworkManager::configure(const config::PartReworkConfig& config)
-{
-  RCLCPP_WARN(node_->get_logger(), "%s not implemented yet", __PRETTY_FUNCTION__);
-  return true;
-}
+private:
+  /// Private data pointer
+  std::unique_ptr<JointPoseTrajectoryPrivate> impl_;
+};
+}  // namespace crs_gazebo_plugins
 
-common::ActionResult PartReworkManager::getUserSelection()
-{
-  RCLCPP_WARN(node_->get_logger(), "%s not implemented yet", __PRETTY_FUNCTION__);
-  return true;
-}
-
-common::ActionResult PartReworkManager::trimToolpaths()
-{
-  RCLCPP_WARN(node_->get_logger(), "%s not implemented yet", __PRETTY_FUNCTION__);
-  return true;
-}
-
-common::ActionResult PartReworkManager::showPreview()
-{
-  RCLCPP_WARN(node_->get_logger(), "%s not implemented yet", __PRETTY_FUNCTION__);
-  return true;
-}
-
-} /* namespace task_managers */
-} /* namespace crs_application */
+#endif /* INCLUDE_CRS_GAZEBO_PLUGINS_JOINT_POSE_TRAJECTORY_HPP_ */

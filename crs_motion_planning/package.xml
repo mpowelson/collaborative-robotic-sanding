@@ -21,6 +21,7 @@
   <depend>std_srvs</depend>
   <depend>std_msgs</depend>
   <depend>crs_msgs</depend>
+  <depend>control_msgs</depend>
 
   <depend>tesseract_msgs</depend>
   <depend>tesseract</depend>
@@ -40,11 +41,13 @@
   <depend>descartes_samplers</depend>
 
   <depend>tf2</depend>
+  
+  <depend>iterative_spline_parameterization</depend>
 
-  <depend>yaml-cpp</depend>
+  <depend>yaml_cpp_vendor</depend>
   <depend>action_msgs</depend>
   <depend>visualization_msgs</depend>
-
+  
   <export>
     <build_type>ament_cmake</build_type>
   </export>
